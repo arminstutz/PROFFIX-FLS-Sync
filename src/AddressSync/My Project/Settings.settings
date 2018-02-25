@@ -1,0 +1,54 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="My" GeneratedClassName="MySettings" UseMySettingsClassName="true">
+  <Profiles />
+  <Settings>
+    <Setting Name="Password" Type="System.String" Scope="User">
+      <Value Profile="(Default)">szik5fzsEWA=</Value>
+    </Setting>
+    <Setting Name="Username" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="Crypto" Type="System.String" Scope="User">
+      <Value Profile="(Default)">smc%espo$</Value>
+    </Setting>
+    <Setting Name="ServiceAPITokenMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://test.glider-fls.ch/Token</Value>
+    </Setting>
+    <Setting Name="ServiceAPIPersonMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://test.glider-fls.ch/api/v1/persons/</Value>
+    </Setting>
+    <Setting Name="ServiceAPIDeliveriesNotProcessedMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://test.glider-fls.ch/api/v1/deliveries/notprocessed</Value>
+    </Setting>
+    <Setting Name="ServiceAPIDeletedPersonFulldetailsMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://test.glider-fls.ch/api/v1/persons/fulldetails/deleted/</Value>
+    </Setting>
+    <Setting Name="ServiceAPIModifiedPersonFullDetailsMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://test.glider-fls.ch/api/v1/persons/fulldetails/modified/</Value>
+    </Setting>
+    <Setting Name="ShowSameFields" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ServiceAPICountriesMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://test.glider-fls.ch/api/v1/countries/overview</Value>
+    </Setting>
+    <Setting Name="ServiceAPIArticlesMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://test.glider-fls.ch/api/v1/articles/</Value>
+    </Setting>
+    <Setting Name="ServiceAPIPersonsMemberNrMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://test.glider-fls.ch/api/v1/persons/membernumber/</Value>
+    </Setting>
+    <Setting Name="ServiceAPIMemberStates" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://test.glider-fls.ch/api/v1/memberstates</Value>
+    </Setting>
+    <Setting Name="ServiceAPIDeliveredMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://test.glider-fls.ch/api/v1/deliveries/delivered</Value>
+    </Setting>
+    <Setting Name="ServiceAPIModifiedFlightsMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://test.glider-fls.ch/api/v1/flights/exchange/modified/</Value>
+    </Setting>
+    <Setting Name="ServiceAPIAircraftsMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://test.glider-fls.ch/api/v1/aircrafts/overview</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

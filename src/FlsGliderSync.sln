@@ -1,0 +1,28 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "FlsGliderSync", "AddressSync\FlsGliderSync.vbproj", "{60BDBAEF-7F7E-4E29-90FC-8B0B3AED29EA}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "UnitTestProject1", "UnitTestProject1\UnitTestProject1.vbproj", "{BBD2E692-E862-4E1D-A63C-38C9231A6D20}"
+	ProjectSection(ProjectDependencies) = postProject
+		{60BDBAEF-7F7E-4E29-90FC-8B0B3AED29EA} = {60BDBAEF-7F7E-4E29-90FC-8B0B3AED29EA}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{60BDBAEF-7F7E-4E29-90FC-8B0B3AED29EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60BDBAEF-7F7E-4E29-90FC-8B0B3AED29EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60BDBAEF-7F7E-4E29-90FC-8B0B3AED29EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60BDBAEF-7F7E-4E29-90FC-8B0B3AED29EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBD2E692-E862-4E1D-A63C-38C9231A6D20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBD2E692-E862-4E1D-A63C-38C9231A6D20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBD2E692-E862-4E1D-A63C-38C9231A6D20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBD2E692-E862-4E1D-A63C-38C9231A6D20}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
