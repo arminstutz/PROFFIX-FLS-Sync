@@ -135,9 +135,18 @@ Public Class LinkAdressen
                                 Dim personIdAusPX As String = pxhelper.GetPersonId(address.AdressNr.ToString)
                                 Dim adressNrAusPX As String = address.AdressNr.ToString
 
-                                ' wenn bereits richtig verknüpft --> nichts machen + unnötig zu prüfen, ob es gleiche Person ist
-                                If (adressNrAusFLS = adressNrAusPX) And personIdAusFLS = personIdAusPX Then
-                                    Exit For
+                                If (adressNrAusFLS = adressNrAusPX) Then
+                                    If (personIdAusFLS = personIdAusPX) Then
+                                        ' wenn bereits richtig verknüpft --> nichts machen + unnötig zu prüfen, ob es gleiche Person ist
+                                        Exit For
+                                    Else If (personIdAusPX.Trim() = String.Empty)
+                                        ' adressNrAusFLS (MemberNumber) ist gleich wie AddressNrAusPX und Vorname und Nachname stimmt auch überein
+                                        ' PersonIdAusPX ist aber noch leer --> PersonId in PX setzen mit PersonId aus FLS
+                                        ' *******************************
+                                        ' TODO:  PersonId in PX schreiben
+                                        ' *******************************
+
+                                    End If
                                 End If
 
                                 ' die Adressen sind noch nicht verknüpft
