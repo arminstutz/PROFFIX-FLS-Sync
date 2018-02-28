@@ -156,11 +156,11 @@
     <Compile Include="Helper\FLS\FlsHelper.vb" />
     <Compile Include="Processes\GeneralDataLoader.vb" />
     <Compile Include="Processes\LinkAdressen.vb" />
-    <Compile Include="Mapper\ArticleMapper.vb" />
+    <Compile Include="Helper\Mapper\ArticleMapper.vb" />
     <Compile Include="Processes\Exporter.vb" />
     <Compile Include="Helper\Proffix\ProffixConnection.vb" />
     <Compile Include="FlsGliderSync.vb" />
-    <Compile Include="Mapper\ClubMapper.vb" />
+    <Compile Include="Helper\Mapper\ClubMapper.vb" />
     <Compile Include="Helper\Proffix\ProffixHelper.vb" />
     <Compile Include="Processes\Importer.vb" />
     <Compile Include="Forms\FrmDatabaseAuswahl.designer.vb">
@@ -181,8 +181,8 @@
     <Compile Include="Forms\FrmSettings.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Mapper\Mapper.vb" />
-    <Compile Include="Mapper\MappingProperty.vb" />
+    <Compile Include="Helper\Mapper\Mapper.vb" />
+    <Compile Include="Helper\Mapper\MappingProperty.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -198,7 +198,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Mapper\PersonMapper.vb" />
+    <Compile Include="Helper\Mapper\PersonMapper.vb" />
     <Compile Include="Helper\FLS\FlsConnection.vb" />
     <Compile Include="Processes\Syncers\PersonDeleter.vb" />
     <Compile Include="Processes\Syncers\PersonLoader.vb" />

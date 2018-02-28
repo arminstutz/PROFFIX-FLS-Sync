@@ -30,7 +30,7 @@ Public Class PersonUpdater
         Dim personChangeDate As DateTime = CDate(FlsHelper.GetPersonChangeDate(person))
 
         If logAusfuehrlich Then
-            Logger.GetInstance.Log(LogLevel.Info, "In beiden vorhanden PersonId: " + person("PersonId").ToString + " AdressNr: " + address.AdressNr.ToString)
+            Logger.GetInstance.Log(LogLevel.Info, "In beiden vorhanden PersonId: " + person("PersonId").ToString.ToLower.Trim + " AdressNr: " + address.AdressNr.ToString)
         End If
 
         ' Änderungsdatum auslesen
@@ -106,7 +106,7 @@ Public Class PersonUpdater
 
         ' IsActive/Geloescht synchronisieren
         If Not pxhelper.SetGeloeschtInPXAdresseDependingOnIsActive(person) Then
-            logComplete("Fehler beim Updaten des Geloescht Feldes in Proffix. PersonId: " + person("PersonId").ToString, LogLevel.Exception)
+            logComplete("Fehler beim Updaten des Geloescht Feldes in Proffix. PersonId: " + person("PersonId").ToString.ToLower.Trim, LogLevel.Exception)
         End If
 
         logComplete("Aktualisiert in Proffix: AdressNr: " + address.AdressNr.ToString + " Nachname: " + address.Name + " Vorname: " + If(address.Vorname IsNot Nothing, address.Vorname, ""), LogLevel.Info)
@@ -153,7 +153,7 @@ Public Class PersonUpdater
 
             ' Geloescht/IsActive in FLS updaten
             If Not pxhelper.SetIsActiveInFLSPersonDependingOnGeloescht(person, address.AdressNr.ToString) Then
-                logComplete("Fehler beim Updaten des Geloescht Feldes in Proffix. PersonId: " + person("PersonId").ToString, LogLevel.Exception)
+                logComplete("Fehler beim Updaten des Geloescht Feldes in Proffix. PersonId: " + person("PersonId").ToString.ToLower.Trim, LogLevel.Exception)
                 Return False
             End If
 
@@ -162,7 +162,7 @@ Public Class PersonUpdater
             ' End If
 
             'Adresse in FLS updaten (mit Änderungen, die in Proffix gemacht wurden
-            response_FLS = _serviceClient.SubmitChanges(person("PersonId").ToString(), person, SyncerCommitCommand.Update)
+            response_FLS = _serviceClient.SubmitChanges(person("PersonId").ToString.ToLower.Trim, person, SyncerCommitCommand.Update)
             If response_FLS <> "OK" Then
                 logComplete("Fehler beim Updaten In FLS: AdressNr: " + address.AdressNr.ToString + "Nachname: " + address.Name + " Vorname: " + If(address.Vorname IsNot Nothing, address.Vorname, "") + address.Name, LogLevel.Exception, response_FLS + " " + person.ToString)
                 Return False

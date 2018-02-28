@@ -19,7 +19,7 @@ Public Class PersonDeleter
         person("ClubRelatedPersonDetails")("IsActive") = False
   
         'Adresse in FLS updaten (mit Änderungen, die in Proffix gemacht wurden
-        response_FLS = _serviceClient.SubmitChanges(person("PersonId").ToString(), person, SyncerCommitCommand.Update)
+        response_FLS = _serviceClient.SubmitChanges(person("PersonId").ToString.ToLower.Trim, person, SyncerCommitCommand.Update)
         If response_FLS <> "OK" Then
             logComplete("Fehler beim Löschen In FLS: AdressNr: " + GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber") + "Nachname: " + GetValOrDef(person, "Lastname") + " Vorname: " + GetValOrDef(person, "Firstname"), LogLevel.Exception, response_FLS + " " + person.ToString)
             Return False

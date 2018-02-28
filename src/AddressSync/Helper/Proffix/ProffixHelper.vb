@@ -43,7 +43,7 @@ Public Class ProffixHelper
             If rs.EOF Then
                 ' es konnte kein LastSync geladen werden, da für den angegebenen synctype noch kein Datensatz in ZUS_FLSSync erstellt wurde
                 '--> Defaultdate
-                Return DateTime.Parse("2017-02-02 08:00:00.000")
+                Return DateTime.Parse("2013-02-02 08:00:00.000")
                 'Return DateTime.MinValue
             End If
         End If
@@ -1040,7 +1040,7 @@ Public Class ProffixHelper
                 geloescht = "0"
             End If
 
-            sql = "update adr_adressen set geloescht = " + geloescht + " where Z_FLSPersonId = '" + person("PersonId").ToString + "'"
+            sql = "update adr_adressen set geloescht = " + geloescht + " where Z_FLSPersonId = '" + person("PersonId").ToString.ToLower.Trim + "'"
             If Not MyConn.getRecord(rs, sql, fehler) Then
                 Throw New Exception(fehler)
             End If

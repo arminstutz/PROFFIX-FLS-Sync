@@ -216,7 +216,7 @@ Public Class GeneralDataLoader
                     "Geaendert, " +
                     "Exportiert" +
                             ") values (" +
-                                "'" + person("PersonId").ToString + "', " +
+                                "'" + person("PersonId").ToString.ToLower.Trim + "', " +
                                 FlsHelper.GetValOrDefString(person, "Lastname") + ", " +
                                 FlsHelper.GetValOrDefString(person, "Firstname") + ", " +
                                 FlsHelper.GetValOrDefString(person, "City") + ", " +

@@ -149,11 +149,6 @@ Public Class Syncer
             For Each person As JObject In FLSPersons
 
                 Try
-                    ''debug
-                    'If person("Lastname").ToString <> "Zollinger" Then
-                    '    Continue For
-                    'End If
-
 
                     If logAusfuehrlich Then
                         Logger.GetInstance.Log(LogLevel.Info, "Geprüft wird FLS-Adresse Nachname: " + person("Lastname").ToString + " Vorname: " + person("Firstname").ToString)
@@ -168,10 +163,17 @@ Public Class Syncer
                     Dim existsInProffix As Boolean = False          ' Default setzen (wird später nur auf True gesetzt, wenn in PX gefunden)
 
                     ' PersonId und Änderungsdatum auslesen
-                    Dim flsPersonId As String = person("PersonId").ToString
+                    Dim flsPersonId As String = person("PersonId").ToString.ToLower.Trim
 
-                    ' die FLS-Adresse mit jeder Adresse aus Proffix vergleichen
-                    For Each address As pxKommunikation.pxAdressen In PXadressen
+                    ' Adresse suchen, die dieselbe PersonId hat
+                    Dim adressemitPersonId As IEnumerable(Of pxKommunikation.pxAdressen) = From address As pxKommunikation.pxAdressen In PXadressen Where flsPersonId = ProffixHelper.GetZusatzFelder(address, "Z_FLSPersonId").ToLower.Trim
+
+                    ' nur noch die eine bereits gefundene pxadresse mit der relevanten Personid abarbeiten
+                    For Each address As pxKommunikation.pxAdressen In adressemitPersonId
+
+                        ' die FLS-Adresse mit jeder Adresse aus Proffix vergleichen
+                        '  For Each address As pxKommunikation.pxAdressen In PXadressen
+
 
                         If logAusfuehrlich Then
                             Logger.GetInstance.Log(LogLevel.Info, "Verglichen werden FLS-Adresse Nachname: " + person("Lastname").ToString + " Vorname: " + person("Firstname").ToString + " mit PX-Adresse " + address.AdressNr.ToString + " Nachname: " + address.Name)
@@ -196,9 +198,9 @@ Public Class Syncer
                                 Dim synchronizeOk As Integer
                                 Dim Z_sync_dbvalue = ProffixHelper.GetZusatzFelder(address, "Z_Synchronisieren")
                                 Try
-                                    synchronizeok = CInt(Z_sync_dbvalue)    ' 0 oder 1 auslesen (catch, falls null) --> gilt als zu synchroniseren
+                                    synchronizeOk = CInt(Z_sync_dbvalue)    ' 0 oder 1 auslesen (catch, falls null) --> gilt als zu synchroniseren
                                 Catch ex As Exception
-                                    synchronizeok = 1
+                                    synchronizeOk = 1
                                 End Try
                                 If CInt(synchronizeOk) = 1 Then
 
@@ -206,7 +208,7 @@ Public Class Syncer
                                     If Not GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber") = address.AdressNr.ToString Then
                                         If Not GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber") = "" Then
                                             logComplete("Die AdressNr in PX: " + address.AdressNr.ToString + " stimmt nicht überein mit der VereinsmitgliedNr in FLS: " + GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber") +
-                                                        " gemeinsame PersonId: " + person("PersonId").ToString + "FLS-person: " + person.ToString, LogLevel.Exception)
+                                                        " gemeinsame PersonId: " + person("PersonId").ToString.ToLower.Trim + "FLS-person: " + person.ToString, LogLevel.Exception)
                                             Exit For
                                         End If
                                     End If
