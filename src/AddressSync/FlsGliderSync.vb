@@ -24,5 +24,14 @@ Public Module FlsGliderSync
     ' dieser Postfix wird in FLS an MemberNr angehängt, wenn Adresse nur noch in FLS und in PX ganz gelöscht wurde
     Friend Property postfix As String = "_delInPX"
 
-   
+    ' definiert, welche DB bei der 1. Synchronisation als Master gelten soll.
+    ' wenn im FlsGliderSync.ini master=fls oder master=proffix steht, ist die entsprechende DB master. ansonsten wird je nach Änderungsdatum geupdatet
+    Friend Property Master As UseAsMaster
+
 End Module
+
+Public Enum UseAsMaster
+    fls
+    proffix
+    undefined
+End Enum

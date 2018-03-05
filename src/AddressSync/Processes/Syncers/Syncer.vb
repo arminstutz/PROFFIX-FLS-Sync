@@ -100,6 +100,25 @@ Public Class Syncer
 
         Try
 
+            ' prüfen, ob ein Master gesetzt ist und nachfragen, ob wirklich so gewünscht
+            If Master = UseAsMaster.fls Or Master = UseAsMaster.proffix Then
+                Dim mast As String
+                Dim slave As String
+
+                If Master = UseAsMaster.fls Then
+                    mast = "FLS"
+                    slave = "Proffix"
+                Else
+                    mast = "Proffix"
+                    slave = "FLS"
+                End If
+
+                If DialogResult.OK <> MessageBox.Show("In der ini-Datei ist definiert, dass alle Adressen beim Update von " + mast + " zu " + slave + " übertragen werden sollen.", "Master ist gesetzt", MessageBoxButtons.OKCancel) Then
+                    logComplete("Die Synchronisation wurde manuell abgebrochen", LogLevel.Exception)
+                    Return False
+                End If
+            End If
+
             ' abfangen, wenn kein LastSync geladen wurde
             If LastSync = Nothing Then
                 logComplete("Es wurde kein LastSync-Datum gefunden.", LogLevel.Exception)
@@ -132,7 +151,7 @@ Public Class Syncer
 
             '*********************************************************************alle Daten laden***********************************************************************
             ' lädt alle in die Funktion übergegebene Listen mit Werten
-            If Not Loader.datenLaden(FLShardDeletedPersons, FLSPersons, PXadressen) Then
+            If Not loader.datenLaden(FLShardDeletedPersons, FLSPersons, PXadressen) Then
                 logComplete("Fehler beim Laden der Daten", LogLevel.Exception)
                 Return False
             End If
@@ -213,10 +232,18 @@ Public Class Syncer
                                         End If
                                     End If
 
+                                    ' es ist ein Master definiert --> alle updates erfolgen von jener Seite her
+                                    If Master = UseAsMaster.fls Or Master = UseAsMaster.proffix Then
+                                        If Not updater.updateAccordingMaster(person, address, Master) Then
+                                            successful = False
+                                        End If
 
-                                    ' die Adressen, welche in beiden Systemen bereits vorhanden sind, entsprechend updaten
-                                    If Not updater.update(person, address, LastSync) Then
-                                        successful = False
+                                        ' es ist kein Master definiert --> updates erfolgen von der Seite her, wo die letzte Änderung gemacht wurde
+                                    Else
+                                        ' die Adressen, welche in beiden Systemen bereits vorhanden sind, entsprechend updaten
+                                        If Not updater.updateAccordingDate(person, address, LastSync) Then
+                                            successful = False
+                                        End If
                                     End If
 
                                     Progress += 1
@@ -265,7 +292,7 @@ Public Class Syncer
 
             Next        ' nächste FLS-Adresse (person)
 
-         
+
 
             '**************************************************************************************CREATE IN FLS + PERSONID IN PROFFIX
             ' _AddressWorkProgress enthält die AdressNr (Proffix) der Adressen, die in beiden sind.
@@ -312,7 +339,7 @@ Public Class Syncer
                         Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Verarbeiten von PX-Adresse (existiert nur in PX) AdressNr: " + address.AdressNr.ToString + " Name: " + address.Name)
                     End Try
                 Next
-              
+
             End If
             Progress = Count
             InvokeDoProgress()

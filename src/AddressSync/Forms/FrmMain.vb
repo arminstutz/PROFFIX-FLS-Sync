@@ -19,10 +19,14 @@ Imports System.Reflection
 ' --> für Installation beim Kunden muss "Testumgebung=1" aus dem ini entfernt werden
 ' --> bei Installation: URLs prüfen (werden in log angegeben, sofern in .ini logAusfuehrlich = 1)
 
+' im Ini kann angegeben werden, falls alle Adressen vom einen zum anderen System geupdatet werden sollen (letzte Änderung wird dann ignoriert) Dies ist bei der 1. Synchronisation nötig, da dann nur FLS die Werte der Zusatzfelder kennt
+' im ini muss immer master= stehen. Falls master=fls steht, werden alle Adressen von fls in PX geschrieben. Umgekehrt mit master=proffix
+' Bei Installtion des Programms muss somit im ini master=fls gesetzt werden, und nach der 1. Synchronisation master= gesetzt werden
+
 '- relevante Webseiten + Anmeldung: 
 '   - https://test.glider-fls.ch bzw. https://fls.glider-fls.ch --> API --> welche Methoden könen aufgerufen werden
-'   - https://test.glider-fls.ch/client --> Anmeldung Testumgebung (User: fgzoproffix, PW: Proffix2016$)
-'   - https://fls.glider-fls.ch/client --> Anmeldung FLS (User: sgnproffix, PW: SGNProffix2016$)
+'   - https://test.glider-fls.ch/client --> Anmeldung Testumgebung (Userdaten: bei Patrick Schuler anfragen)
+'   - https://fls.glider-fls.ch/client --> Anmeldung FLS (Userdaten: bei Patrick Schuler anfragen)
 
 
 '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -168,6 +172,19 @@ Public Class FrmMain
             If logAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, "fuerTestversionAnpassen() wurde ausgeführt")
             End If
+        End If
+
+        ' auslesen, ob ein Master definiert ist
+        ' wenn master=fls --> Beim Sync wird im Fall eines Updates immer PX mit FLS überschrieben (benötigt bei 1. Synchronisation)
+        ' wenn master=proffix --> Beim sync wird im Fall eines Updates immer FLS mit PX überschrieben
+        ' in allen anderen Fällen "master= ,master=irgendwasanderes --> Beim Sync wird im Fall eiens updates die zuletzt veränderte Adresse verwendet
+        Dim masterdb As String = readFromIni("master").ToLower
+        If masterdb = "fls" Then
+            Master = UseAsMaster.fls
+        ElseIf masterdb = "proffix" Then
+            Master = UseAsMaster.proffix
+        Else
+            Master = UseAsMaster.undefined
         End If
 
         If logAusfuehrlich Then
@@ -387,7 +404,7 @@ Public Class FrmMain
 
     Private Sub LinkerWork()
         Try
-            ' MessageBox.Show("Debug: Linker wird übersprungen. Ist in LinkerWork() auskommentiert", "")
+            'MessageBox.Show("Debug: Linker wird übersprungen. Ist in LinkerWork() auskommentiert", "")
             linkersuccessful = Linker.Link()
         Catch exce As Exception
             'Den Fehler ausgeben und zurücksetzen

@@ -22,7 +22,48 @@ Public Class PersonUpdater
         Me.Log = Log
     End Sub
 
-    Public Function update(ByVal person As JObject, ByVal address As pxKommunikation.pxAdressen, ByVal lastSync As DateTime) As Boolean
+    ' updates the address
+    Public Function updateAccordingMaster(ByVal person As JObject, ByVal address As pxKommunikation.pxAdressen, ByVal master As UseAsMaster) As Boolean
+
+        If logAusfuehrlich Then
+            Logger.GetInstance.Log(LogLevel.Info, "In beiden vorhanden PersonId: " + person("PersonId").ToString.ToLower.Trim + " AdressNr: " + address.AdressNr.ToString)
+        End If
+
+
+        '***************************************************************************************UPDATE IN PROFFIX***********************************************************
+        If master = UseAsMaster.fls Then
+
+            'Die Adresse wird in PROFFIX aktualisiert
+            If Not updateInProffix(person, address, rs_adressdefault) Then
+                Return False
+            End If
+
+            '******************************************************************************UPDATE IN FLS******************************************************************
+        ElseIf master = UseAsMaster.proffix Then
+
+            ' wenn die Adresse synchronisiert werden soll
+            If CInt(ProffixHelper.GetZusatzFelder(address, "Z_Synchronisieren")) = 1 Then
+
+                ' in FLS updaten
+                If Not updateInFLS(person, address) Then
+                    Return False
+                End If
+
+            End If
+
+            ' keine DB wurde als Master definiert --> das hier ist für diesen Fall die falsche Funktion
+        Else
+            Logger.GetInstance.Log(LogLevel.Exception, "Fehler in " + MethodBase.GetCurrentMethod.Name + " master hat nicht den Wert fls oder proffix, sondern " + master.ToString)
+            Return False
+        End If
+
+        Return True
+    End Function
+
+
+
+
+    Public Function updateAccordingDate(ByVal person As JObject, ByVal address As pxKommunikation.pxAdressen, ByVal lastSync As DateTime) As Boolean
         'Flag auf Default false setzen
         Dim newerInFLS As Boolean = False
         Dim newerInProffix As Boolean = False
