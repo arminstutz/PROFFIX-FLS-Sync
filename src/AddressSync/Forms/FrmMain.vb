@@ -233,6 +233,7 @@ Public Class FrmMain
         'Dim loginUser As String
         'loginUser = readFromIni()
 
+        Proffix.GoBook.LoginUser = "FlsGliderSync"
         ' mit Proffix verbinden und anzeigen, ob erfolgreich
         If Not Proffix.Open() Then
             Log("Proffix-Anmeldung fehlgeschlagen.")
@@ -241,6 +242,15 @@ Public Class FrmMain
                 End
             End If
         End If
+
+        ' DEBUG
+        Dim fehler As String
+        Dim adressen() As pxKommunikation.pxAdressen = {}
+        Proffix.GoBook.GetAdresse(pxKommunikation.pxAdressSuchTyp.AdressNr, "3", adressen, fehler)
+        adressen(1).Strasse = "Teeststrasse"
+        Proffix.GoBook.AddAdresse(adressen(1), fehler)
+
+
 
         ' Proffix-Anemdlung erfolgreich
         Log("Proffix-Anmeldung erfolgreich")
