@@ -10,8 +10,7 @@ Public Module FlsGliderSync
     ''' <summary>
     ''' Die Verbindung zu PROFFIX
     ''' </summary>
-    Friend Property Proffix As Proffix = New Proffix("25sdf-ds829-artea-32666", "FlsGliderSync", Application.StartupPath + "\")
-    'Für Proffix V4.1007: Public Property Proffix As Proffix = New Proffix("23sdf-ds829-affea-32444", "FlsGliderSync", Application.StartupPath + "\")
+    Friend Property Proffix As Proffix = New Proffix(ProffixCrypto.Decrypt(readFromIni("licenseKey"), My.Settings.Crypto), "FlsGliderSync", Application.StartupPath + "\")
 
     ''' <summary>
     ''' Die Helper klasse für die Verschlüsselung

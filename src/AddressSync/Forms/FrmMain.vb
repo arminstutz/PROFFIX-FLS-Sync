@@ -104,7 +104,7 @@ Public Class FrmMain
     End Sub
 
     '*******************************************************************Klasse FrmMain***********************************************************************************
-    Private GoBook As New pxBook.pxKommunikation
+    ' Private GoBook As New pxBook.pxKommunikation
     Private Property frmSettings As FrmSettings
     Private Property frmLS As FrmLSManage
 
@@ -230,6 +230,9 @@ Public Class FrmMain
         'verwendeter Account anzeigen
         lblAccount.Text = My.Settings.Username
         '*****************************************************************bei Proffix anmelden*****************************************************************
+        'Dim loginUser As String
+        'loginUser = readFromIni()
+
         ' mit Proffix verbinden und anzeigen, ob erfolgreich
         If Not Proffix.Open() Then
             Log("Proffix-Anmeldung fehlgeschlagen.")
