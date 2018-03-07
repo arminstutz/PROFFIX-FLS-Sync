@@ -230,10 +230,7 @@ Public Class FrmMain
         'verwendeter Account anzeigen
         lblAccount.Text = My.Settings.Username
         '*****************************************************************bei Proffix anmelden*****************************************************************
-        'Dim loginUser As String
-        'loginUser = readFromIni()
-
-        Proffix.GoBook.LoginUser = "FlsGliderSync"
+        Proffix.GoBook.LoginUser = Assembly.GetExecutingAssembly().GetName.Name
         ' mit Proffix verbinden und anzeigen, ob erfolgreich
         If Not Proffix.Open() Then
             Log("Proffix-Anmeldung fehlgeschlagen.")
@@ -242,15 +239,6 @@ Public Class FrmMain
                 End
             End If
         End If
-
-        ' DEBUG
-        Dim fehler As String
-        Dim adressen() As pxKommunikation.pxAdressen = {}
-        Proffix.GoBook.GetAdresse(pxKommunikation.pxAdressSuchTyp.AdressNr, "3", adressen, fehler)
-        adressen(1).Strasse = "Teeststrasse"
-        Proffix.GoBook.AddAdresse(adressen(1), fehler)
-
-
 
         ' Proffix-Anemdlung erfolgreich
         Log("Proffix-Anmeldung erfolgreich")
@@ -1212,15 +1200,19 @@ Public Class FrmMain
 
     Private Sub tsmiClearLink_Click(sender As Object, e As EventArgs) Handles tsmiClearLink.Click
         PrepareWork()
-        If DialogResult.OK = MessageBox.Show("Sind Sie sicher, dass Sie die Verknüpfung der Adressen aus FLS und Proffix aufheben wollen? " + vbCrLf + vbCrLf +
-                                             "Wenn sie danach die nächste Adresssynchronisation ausführen, werden die Adressen neu verknüpft." + vbCrLf + vbCrLf +
-                                             "Danach werden alle Adressen in FLS als aktueller gelten und in Proffix aktualisiert!!!", "Verknüpfung wirklich löschen?", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) Then
-            If Not Linker.verknuepfungenAufheben() Then
-                Log("Fehler beim Aufheben der Verknüpfungen der Adresse")
-            Else
-                Log("Verknüpfungen erfolgreich aufgehoben")
-            End If
-        End If
+        MsgBox("Steht momentan nicht zur Verfügung. Wenden Sie sich an den Support von FLS oder SMC Computer AG wenn Sie wirklich alle Adressen neu verknüpfen wollen.", vbCritical)
+
+        ' steht dem User momemtan nicht zur Verfügung, da eine Neuverknüpfung Fehlerpotential besitzt
+
+        'If DialogResult.OK = MessageBox.Show("Sind Sie sicher, dass Sie die Verknüpfung der Adressen aus FLS und Proffix aufheben wollen? " + vbCrLf + vbCrLf +
+        '                                     "Wenn sie danach die nächste Adresssynchronisation ausführen, werden die Adressen neu verknüpft." + vbCrLf + vbCrLf +
+        '                                     "Danach werden alle Adressen in FLS als aktueller gelten und in Proffix aktualisiert!!!", "Verknüpfung wirklich löschen?", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) Then
+        '    If Not Linker.verknuepfungenAufheben() Then
+        '        Log("Fehler beim Aufheben der Verknüpfungen der Adresse")
+        '    Else
+        '        Log("Verknüpfungen erfolgreich aufgehoben")
+        '    End If
+        'End If
         EndWork()
     End Sub
 

@@ -122,7 +122,7 @@ Public Class LinkAdressen
 
 
                 ' Linq testen. Vorselektion. Gehe in for each nur die Adressen durch, bei denen der Name und Vorname stimmt
-                Dim gleichnamigeAdressen As IEnumerable(Of pxKommunikation.pxAdressen) = From address As pxKommunikation.pxAdressen In adressList Where address.Name.Trim = personname And address.Vorname = personvorname.Trim
+                Dim gleichnamigeAdressen As IEnumerable(Of pxKommunikation.pxAdressen) = From address As pxKommunikation.pxAdressen In adressList Where address.Name.Trim = personname.Trim And address.Vorname.Trim = personvorname.Trim
                 If gleichnamigeAdressen.Count = 0 Then
                     If logAusfuehrlich Then
                         Logger.GetInstance.Log(LogLevel.Info, "Keine Adressen mit Name " + personname + " Vorname " + personvorname + " in PX vorhanden")
@@ -147,15 +147,16 @@ Public Class LinkAdressen
                         ' If personname.Trim() = addressname.Trim() And personvorname.Trim() = addressvorname.Trim() Then
 
                         Dim personIdAusFLS As String = person("PersonId").ToString.ToLower.Trim
-                        Dim adressNrAusFLS As String = GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber").Trim
+                        Dim adressNrAusFLS As String = GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber").ToLower.Trim
                         Dim personIdAusPX As String = pxhelper.GetPersonId(address.AdressNr.ToString).ToLower.Trim
-                        Dim adressNrAusPX As String = address.AdressNr.ToString.Trim
+                        Dim adressNrAusPX As String = address.AdressNr.ToString.ToLower.Trim
 
                         ' wenn FLS bereits eine AdressNr eingetragen hat --> prüfen, ob die Adressen bereits richtig verknüpft sind
                         If (adressNrAusFLS = adressNrAusPX) Then
                             If (personIdAusFLS = personIdAusPX) Then
                                 ' wenn bereits richtig verknüpft --> nichts machen + unnötig zu prüfen, ob es gleiche Person ist
                                 Exit For
+
                                 ' FLS hat zwar bereits die PX-Adressnr, aber PX noch nicht die PersonId
                             ElseIf (personIdAusPX = String.Empty) Then
 
@@ -327,7 +328,7 @@ Public Class LinkAdressen
         'Dim syncOk As Integer   ' ist die Adresse in PX als zu synchronisieren markiert (Zuatzfeld Z_Synchronisieren = 1)
 
         Try
-            sql = "select * from adr_adressen where Z_synchronisieren = 1"
+            sql = "select * from adr_adressen where Z_synchronisieren = 1 order by name"
             If Not myconn.getRecord(rs, sql, fehler) Then
                 Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Laden der Adressen aus Proffix")
                 Return Nothing

@@ -45,10 +45,13 @@ Public Class PersonCreator
             '--> wurde in PX gelöscht, da nur noch in FLS vorhanden
         Else
 
-            ' wenn in FLS NICHT seit letzter Synchronisation verändert --> in FLS auch löschen 
+            ' PersonId existiert nur in FLS, hat aber eine MemberNr, Adresse wurde aber nicht verändert 
+            ' wenn in FLS NICHT seit letzter Synchronisation verändert --> nichts machen
             If CDate(FlsHelper.GetPersonChangeDate(person)) < lastSync Then
 
-                logComplete("Nur in FLS und seit letzter Synchronisation nicht verändert: Nachname: " + person("Lastname").ToString + " Vorname: " + person("Firstname").ToString + " Mit dieser Adresse nichts gemacht.", LogLevel.Info)
+                Logger.GetInstance.Log(LogLevel.Info, "Info: Adresse Name: " + person("Lastname").ToString + " Vorname: " + person("Firstname").ToString + " hat die PersonId " + person("PersonId").ToString.ToLower +
+                                       ", welche nur in FLS existiert aber eine MemberNr " + GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber") + " hat. " + vbCrLf +
+                                       "Die Adresse wurde seit der letzten Synchronisation nicht verändert. Mit dieser Adresse wird daher nichts gemacht.")
 
                 '' wenn nicht bereits auf gelöscht gesetzt --> in FLS löschen
                 'If GetValOrDef(person, "ClubRelatedPersonDetails.IsActive").ToLower <> "false" Then
