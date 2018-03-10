@@ -268,6 +268,7 @@ Public Class Importer
             End If
 
             'Iteration durch die Flüge, die zu verrechnen sind
+            'TODO: OrderBy PersonId and Startdate of flight
             For Each delivery As JObject In deliveries.Result.Children()
                 dokNr = 0
                 ' von abgebrochenen Lieferscheinimporten vorhandene Daten für die DeliveryId löschen
@@ -461,6 +462,7 @@ Public Class Importer
         newDocPositions.Add(newTextPosition)
 
         ' jeden Artikel des Deliveries durchgehen
+        ' TODO: OrderBy DeliveryItems.Position to sort the items as in the rules
         For Each lineItem As JObject In delivery("DeliveryItems").Children()
 
             ' aus LineItem ein DocPos erstellen und zu Liste der bereits neu erstellten hinzufügen
