@@ -463,7 +463,7 @@ Public Class Importer
 
         ' jeden Artikel des Deliveries durchgehen
         ' TODO: OrderBy DeliveryItems.Position to sort the items as in the rules
-        For Each lineItem As JObject In delivery("DeliveryItems").Children()
+        For Each lineItem As JObject In delivery("DeliveryItems").Children()        '.OrderBy(delivery("DeliveryItems")("Position"))
 
             ' aus LineItem ein DocPos erstellen und zu Liste der bereits neu erstellten hinzufügen
             newDocPosition = createDocPos(docToEdit.DokumentNr, lineItem, deliveryId)

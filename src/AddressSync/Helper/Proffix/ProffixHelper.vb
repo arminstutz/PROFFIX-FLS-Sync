@@ -197,31 +197,75 @@ Public Class ProffixHelper
 
         Dim rs_lastSync As New ADODB.Recordset
         Dim sql As String = ""
+
+        Dim rs_id As New ADODB.Recordset
+        Dim sql_id As String
+        Dim id As Integer
+
+        ' nächst mögliche id laden
+        sql_id = "select case (select count(*) from zus_FLSSyncDate) when 0 then 1 else (select max(syncid) from ZUS_FLSSyncDate) + 1 end as id"
+        If Not MyConn.getRecord(rs_id, sql_id, fehler) Then
+            Logger.GetInstance.Log("Fehler beim Laden der nächsten Id in ZUS_FLSSyncDate " + fehler)
+            Return False
+        End If
+        If rs_id.EOF Then
+            Logger.GetInstance.Log("kein Record geladen für " + sql_id)
+            Return False
+        End If
+        While Not rs_id.EOF
+            id = CInt(rs_id.Fields("id").Value)
+            rs_id.MoveNext()
+        End While
+
         Try
             ' LastDate updaten (nicht über pxBook AddZusatztabelleWerte(), da es Datum nicht richtig frisst)
             sql = "insert into ZUS_FLSSyncDate " + _
-                "(SyncId, " +
-                "SyncDate, " +
-                "SyncType, " +
-                "LaufNr, " +
-                "ImportNr, " +
-                "erstelltAm, " +
-                "erstelltVon, " +
-                "geaendertAm, " +
-                "geaendertVon, " +
-                "geaendert, " +
-                "exportiert" +
-                ") values (" +
-            "(select case (select count(*) from zus_FLSSyncDate) when 0 then 1 else (select max(syncid) from ZUS_FLSSyncDate) + 1 end), '" +
-            lastDate.ToString(dateTimeFormat) + "', '" +
-            synctype + "', " +
-            GetNextLaufNr("ZUS_FLSSyncDate").ToString + ", " +
-            "0, '" +
-            Now.ToString(dateTimeFormat) + "', '" +
-            Assembly.GetExecutingAssembly().GetName.Name + "', '" +
-            Now.ToString(dateTimeFormat) + "', '" +
-            Assembly.GetExecutingAssembly().GetName.Name + "', " +
-            "1, 0)"
+          "(SyncId, " +
+          "SyncDate, " +
+          "SyncType, " +
+          "LaufNr, " +
+          "ImportNr, " +
+          "erstelltAm, " +
+          "erstelltVon, " +
+          "geaendertAm, " +
+          "geaendertVon, " +
+          "geaendert, " +
+          "exportiert" +
+          ") values (" +
+      "" + id.ToString + ", '" +
+      lastDate.ToString(dateTimeFormat) + "', '" +
+      synctype + "', " +
+      GetNextLaufNr("ZUS_FLSSyncDate").ToString + ", " +
+      "0, '" +
+      Now.ToString(dateTimeFormat) + "', '" +
+      Assembly.GetExecutingAssembly().GetName.Name + "', '" +
+      Now.ToString(dateTimeFormat) + "', '" +
+      Assembly.GetExecutingAssembly().GetName.Name + "', " +
+      "1, 0)"
+
+            'sql = "insert into ZUS_FLSSyncDate " + _
+            '    "(SyncId, " +
+            '    "SyncDate, " +
+            '    "SyncType, " +
+            '    "LaufNr, " +
+            '    "ImportNr, " +
+            '    "erstelltAm, " +
+            '    "erstelltVon, " +
+            '    "geaendertAm, " +
+            '    "geaendertVon, " +
+            '    "geaendert, " +
+            '    "exportiert" +
+            '    ") values (" +
+            '"(select case (select count(*) from zus_FLSSyncDate) when 0 then 1 else (select max(syncid) from ZUS_FLSSyncDate) + 1 end), '" +
+            'lastDate.ToString(dateTimeFormat) + "', '" +
+            'synctype + "', " +
+            'GetNextLaufNr("ZUS_FLSSyncDate").ToString + ", " +
+            '"0, '" +
+            'Now.ToString(dateTimeFormat) + "', '" +
+            'Assembly.GetExecutingAssembly().GetName.Name + "', '" +
+            'Now.ToString(dateTimeFormat) + "', '" +
+            'Assembly.GetExecutingAssembly().GetName.Name + "', " +
+            '"1, 0)"
 
             If Not MyConn.getRecord(rs_lastSync, sql, fehler) Then
                 Logger.GetInstance.Log("Fehler in " + MethodBase.GetCurrentMethod.Name + " " + fehler)
