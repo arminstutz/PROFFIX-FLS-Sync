@@ -118,6 +118,10 @@ Public Class Importer
                 InvokeDoProgressFlight()
             Next
 
+            '  Logger.GetInstance.Log(LogLevel.Info, "flugdaten werden gelöscht")
+            Logger.GetInstance.Log("Allfällige Daten für noch zu importierte " + modifiedFlights.Children.Count.ToString + " Flüge wurden gelöscht")
+
+
             ' wenn bis hierher gekommen --> Flugdatenimport hat für alle FlightIds geklappt
             ProgressFlight = FlightCount
             InvokeDoProgressFlight()
@@ -276,7 +280,7 @@ Public Class Importer
                     InvokeLog("Fehler beim Löschen der Daten für DeliveryId " + delivery("DeliveryId").ToString)
                     Throw New Exception("Fehler beim Löschen der Daten für DeliveryId " + delivery("DeliveryId").ToString)
                     Return False
-                End If
+                 End If
 
                 ' prüfen, ob der Delivery die nötigen Daten enthält. Wenn nicht, kann dieser Delivery nicht importiert werden
                 If Not checkForCompleteDelivery(delivery) Then
@@ -601,8 +605,9 @@ Public Class Importer
             .ArtikelNr = lineItem("ArticleNumber").ToString,
             .Menge = CDec(lineItem("Quantity").ToString),
             .Rabatt = CDec(If(GetValOrDef(lineItem, "DiscountInPercent") = "", 0, lineItem("DiscountInPercent"))),
-            .Zusatzfelder = "Z_DeliveryId = '" + deliveryId + "', Z_DeliveryItemId = '" + GetValOrDef(lineItem, "DeliveryItemId") + "'"
+        .Zusatzfelder = "Z_DeliveryId = '" + deliveryId + "', Z_DeliveryItemId = '" + GetValOrDef(lineItem, "DeliveryItemId") + "'"
             }
+        '  .PositionNr = CInt(lineItem("Position")) * 10, ' st PosNr (Problem: wenn zu bestehendem hinzugefügt --> nicht bei 10 beginnen!!)
 
     End Function
 

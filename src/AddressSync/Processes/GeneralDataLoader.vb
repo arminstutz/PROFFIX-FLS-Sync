@@ -376,6 +376,9 @@ Public Class GeneralDataLoader
                     Return False
                 End If
             Next
+
+            Logger.GetInstance.Log("Allfällige Daten für noch nicht importierte " + notProcessedDeliveries.Result.Children.Count.ToString + " Deliveries wurden gelöscht")
+
         Catch ex As Exception
             Return False
         End Try
@@ -402,6 +405,9 @@ Public Class GeneralDataLoader
                 'End If
                 'End If
             Next
+            '  Logger.GetInstance.Log(LogLevel.Info, "flugdaten werden gelöscht")
+            Logger.GetInstance.Log("Allfällige Daten für noch zu importierte " + modifiedFlights.Children.Count.ToString + " Flüge wurden gelöscht")
+
             Return True
 
         Catch ex As Exception

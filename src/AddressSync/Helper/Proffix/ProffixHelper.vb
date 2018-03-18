@@ -289,8 +289,9 @@ Public Class ProffixHelper
         Dim sql_dokflightlink As String = String.Empty
         Dim fehler As String = String.Empty
 
-        Logger.GetInstance.Log(LogLevel.Info, "Die Daten für die DeliveryId " + DeliveryId + " werden aus Proffix gelöscht.")
-
+        If logAusfuehrlich Then
+            Logger.GetInstance.Log(LogLevel.Info, "Die Daten für die DeliveryId " + DeliveryId + " werden aus Proffix gelöscht.")
+        End If
         '****************************************************************DocPos löschen************************************************************************
         sql_pos = "Delete from AUF_DokumentPos where Z_DeliveryId = '" + DeliveryId + "'"
         If Not MyConn.getRecord(rs_pos, sql_pos, fehler) Then
@@ -346,7 +347,9 @@ Public Class ProffixHelper
         'Dim sql_dokflightlink As String = String.Empty
         Dim fehler As String = String.Empty
 
-        Logger.GetInstance.Log(LogLevel.Info, "Die Daten für die FlightId " + flightid + " werden aus Proffix gelöscht.")
+        If logAusfuehrlich Then
+            Logger.GetInstance.Log(LogLevel.Info, "Die Daten für die FlightId " + flightid + " werden aus Proffix gelöscht.")
+        End If
 
         sql = "Delete from ZUS_Flights where FlightId = '" + flightid + "'"
         If Not MyConn.getRecord(rs, sql, fehler) Then
