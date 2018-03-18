@@ -310,11 +310,17 @@ Public Class Importer
 
                 ' 1 Lieferschein importieren
                 If Not importDelivery(delivery, dokNr) Then
+
+                    ' Lieferscheinimport fehlgeschlagen
+                    If Not FehlerhafterDeliveryVerarbeiten(delivery) Then
+                        InvokeLog(vbTab + "Fehler: Delivery mit DeliveryId " + delivery("DeliveryId").ToString + " konnte nicht verarbeitet werden")
+                    End If
+
                     InvokeLog(vbTab + "Fehler beim Importieren der Lieferscheine oder Erstellen der Dokumente für DeliveryId: " + delivery("DeliveryId").ToString)
                     If Not pxhelper.deleteIncompleteDeliveryData(delivery("DeliveryId").ToString) Then
                         InvokeLog("Fehler beim Löschen der Daten für DeliveryId " + delivery("DeliveryId").ToString)
                     End If
-                    Return False
+                    Continue For
                 End If
 
                 ' wenn dokNr noch 0 ist --> Fehler = es wurde kein Dok erstellt
@@ -374,9 +380,11 @@ Public Class Importer
 
     ' IDs der Lieferscheine, die in PX nicht verarbeitet werden können, in Fehlertabelle schreiben
     Private Function FehlerhafterDeliveryVerarbeiten(ByVal delivery As JObject) As Boolean
+        Dim fehlerBekannt As Boolean = False
 
         ' abfangen ob RecipientDetails leer --> unklar, wer bezahlen muss 
         If delivery("RecipientDetails").ToString = "{}" Then
+            fehlerBekannt = True
             If Not pxhelper.InFehlertabelleSchreiben(delivery, "Lieferschein aus FLS enthält keine Daten zum Rechnungsempfänger") Then
                 Return False
             End If
@@ -384,6 +392,7 @@ Public Class Importer
 
         ' prüfen, ob eine PersonId für Rechnungsempfänger vorhanden ist
         If GetValOrDef(delivery, "RecipientDetails.PersonId") = "" Then
+            fehlerbekannt = True
             If Not pxhelper.InFehlertabelleSchreiben(delivery, "Lieferschein aus FLS enthält keine PersonId als Rechnungsempfänger") Then
                 Return False
             End If
@@ -391,18 +400,25 @@ Public Class Importer
 
         ' prüfen, ob delivery überhaupt Artikel enthält (wenn nicht, ist nicht definiert, welche Artikel mit diesem Flug verknüpft sind
         If delivery("DeliveryItems").Count = 0 Then
+            fehlerBekannt = True
             If Not pxhelper.InFehlertabelleSchreiben(delivery, "Artikel fehlen") Then
                 Return False
             End If
         End If
 
-        ' nachfragen, ob der fehlerhafte Lieferschein als erledigt verbucht werden soll.
-        Dim dialogres As DialogResult = MessageBox.Show("Der Lieferschein mit der DeliveryId " + GetValOrDef(delivery, "DeliveryId") + " ist fehlerhaft. " +
-                                                       "Die DeliveryId und FlightId wurden in die Fehlertabelle ""err_deliveries"" geschrieben. " + vbCrLf + vbCrLf +
-                                                        "Soll der Lieferschein an FLS als erledigt gemeldet werden? " +
-                                                        "Wenn sie JA klicken, kann der Lieferschein nicht mehr über dieses Programm importiert werden, sondern der Lieferschein muss in Proffix manuell erstellt werden!" + vbCrLf + vbCrLf +
-                                                        "Wenn sie NEIN klicken, wird der fehlerhafte Lieferschein beim nächsten Import wieder als zu Importieren erscheinen", "fehlerhafter Lieferschein", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation)
+        ' wenn es keiner der bekannten Fehler war
+        If Not fehlerBekannt Then
+            If Not pxhelper.InFehlertabelleSchreiben(delivery, "unbekannter Fehler") Then
+                Return False
+            End If
+        End If
 
+        ' nachfragen, ob der fehlerhafte Lieferschein als erledigt verbucht werden soll.
+        Dim dialogres As DialogResult = MessageBox.Show("Der Lieferschein mit der DeliveryId " + GetValOrDef(delivery, "DeliveryId") + " kann nicht verarbeitet werden. " +
+                                                       "Die DeliveryId und FlightId wurden in die Fehlertabelle ""err_deliveries"" geschrieben. " + vbCrLf + vbCrLf +
+                                                        "Soll der Lieferschein an FLS als erledigt markiert werden? " +
+                                                        "ACHTUNG: Wenn sie JA klicken, kann der Lieferschein nicht mehr über dieses Programm importiert werden, sondern muss in Proffix manuell erstellt werden!!" + vbCrLf + vbCrLf +
+                                                        "Wenn Sie NEIN klicken, wird der fehlerhafte Lieferschein beim nächsten Import wieder als zu Importieren erscheinen", "Lieferscheinimport fehlgeschlagen", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation)
         If dialogres = DialogResult.Yes Then
             ' fehlerhaften Lieferschein als Verarbeitet an FLS melden, damit er nicht immer wieder kommt
             If Not flagAsDelivered(delivery, 0) Then
