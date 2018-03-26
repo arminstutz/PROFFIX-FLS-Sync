@@ -600,17 +600,74 @@ Public Class Importer
 
     ' erstellt eine DocPos
     Private Function createDocPos(ByVal dokNr As Integer, ByVal lineItem As JObject, ByVal deliveryId As String) As pxBook.pxKommunikation.pxDokumentPos
-        Return New pxBook.pxKommunikation.pxDokumentPos With {
-            .DokumentNr = dokNr,
-            .ArtikelNr = lineItem("ArticleNumber").ToString,
-            .Menge = CDec(lineItem("Quantity").ToString),
-            .Rabatt = CDec(If(GetValOrDef(lineItem, "DiscountInPercent") = "", 0, lineItem("DiscountInPercent"))),
-            .Zusatzfelder = "Z_DeliveryId = '" + deliveryId + "', Z_DeliveryItemId = '" + GetValOrDef(lineItem, "DeliveryItemId") + "'"
-            }
-      
-        '  .PositionNr = CInt(lineItem("Position")) * 10, ' st PosNr (Problem: wenn zu bestehendem hinzugefügt --> nicht bei 10 beginnen!!)
-        '.PreisSw = GetVerkauf1(lineItem("ArticleNumber").ToString),
+        Dim artikelNr As String = lineItem("ArticleNumber").ToString
+        Dim menge As Decimal = CDec(lineItem("Quantity").ToString)
+        Dim preis As Decimal = GetVerkauf1(lineItem("ArticleNumber").ToString)
+        Dim rabatt As Decimal = CDec(If(GetValOrDef(lineItem, "DiscountInPercent") = "", 0, lineItem("DiscountInPercent")))
+        Dim zusatzfelder As String = "Z_DeliveryId = '" + deliveryId + "', Z_DeliveryItemId = '" + GetValOrDef(lineItem, "DeliveryItemId") + "'"
 
+        Dim einheitpro As String
+        Dim rgeinheit As String
+        If Not GetEinheiten(artikelNr, einheitpro, rgeinheit) Then
+            Return Nothing
+        End If
+
+        Dim docpos As New pxBook.pxKommunikation.pxDokumentPos
+
+        With docpos
+            .DokumentNr = dokNr
+            .ArtikelNr = artikelNr
+            .Menge = menge
+            .MengeVerr = menge
+            .Zusatzfelder = zusatzfelder
+            .Lagereinheit = einheitpro
+            .Rechnungseinheit = rgeinheit
+            .PreisSw = preis
+            .PreisFw = preis
+            .Rabatt = rabatt
+        End With
+        Return docpos
+
+        'Return New pxBook.pxKommunikation.pxDokumentPos With {
+        '    .DokumentNr = dokNr,
+        '    .ArtikelNr = artikelNr,
+        '    .Menge = menge,
+        '    .Zusatzfelder = zusatzfelder,
+        '    .Rabatt = rabatt
+        '}
+        '  .PositionNr = CInt(lineItem("Position")) * 10, ' st PosNr (Problem: wenn zu bestehendem hinzugefügt --> nicht bei 10 beginnen!!)
+
+    End Function
+
+    ' Einheiten des Artikels laden
+    Private Function GetEinheiten(ByVal artikelnr As String, ByRef lageinheit As String, ByRef rgeinheit As String) As Boolean
+        Dim sql As String = String.Empty
+        Dim rs As New ADODB.Recordset
+        Dim fehler As String = String.Empty
+
+        sql = "Select einheitpro, einheitrechnung from lag_artikel where artikelnrlag = '" + artikelnr + "'"
+        If Not MyConn.getRecord(rs, sql, fehler) Then
+            Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Laden der Einheiten")
+            Return False
+        End If
+
+        ' prüfen, ob ein DS gefunden wurde
+        If rs.EOF Then
+            Logger.GetInstance.Log(LogLevel.Exception, "Kein Datensatz für Artikel " + artikelnr + " gefunden")
+            Return False
+        End If
+
+        While Not rs.EOF
+            Try
+                lageinheit = rs.Fields("einheitPRO").Value.ToString
+                rgeinheit = rs.Fields("einheitrechnung").Value.ToString
+                Return True
+            Catch ex As Exception
+                Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Auslesen der Einheiten. ArtikelNr: " + artikelnr)
+                Return False
+            End Try
+            rs.MoveNext()
+        End While
     End Function
 
     Private Function GetVerkauf1(ByVal artikelNr As String) As Decimal
@@ -621,6 +678,7 @@ Public Class Importer
 
         If Not MyConn.getRecord(rs, sql, fehler) Then
             Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Laden des Verkaufspreis 1 von Artikel " + artikelNr)
+            Return 0
         End If
 
         While Not rs.EOF
@@ -665,7 +723,11 @@ Public Class Importer
 
                     InvokeLog("Der Artikel " + docpos.ArtikelNr + " " + If(docpos.Bezeichnung1 IsNot Nothing, docpos.Bezeichnung1, "") + " wurde als Dokumentposition zum Dokument " + docToEdit.DokumentNr.ToString + " hinzugefügt.")
                     Logger.GetInstance.Log(LogLevel.Info, "Der Artikel " + docpos.ArtikelNr + " " + If(docpos.Bezeichnung1 IsNot Nothing, docpos.Bezeichnung1, "") + " wurde als Dokumentposition zum Dokument " + docToEdit.DokumentNr.ToString + " hinzugefügt.")
-
+                    If fehler.Contains("Keine gültigen Adressangaben!") Then
+                        ' diese Fehlermeldung kann ignoriert werden, wenn AddDokument() true zurückgegeben hat
+                        Logger.GetInstance.Log(LogLevel.Exception, "pxBook Fehlermeldung wurde ignoriert, da true zurückgegeben wurde. Fehlermeldung: " + fehler)
+                        Return True
+                    End If
                 End If
             Next
 

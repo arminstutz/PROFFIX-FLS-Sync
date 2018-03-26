@@ -311,6 +311,12 @@ Public Class ProffixHelper
 
         ' für jede der verwaisten DocNr...
         While Not rs_doknr.EOF
+            Dim dokNr As Integer = CInt(rs_doknr.Fields("doknr").Value)
+
+            '' Dokument löschen, da die
+            'If Not Proffix.GoBook.DelDokument(doknr, fehler) Then
+            '    Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Löschen des Dokumentes " + doknr.tostring)
+            'End If
 
             ' Doc mit DokNr löschen
             sql_delete = "Delete from auf_dokumente where dokumentnrauf = " + rs_doknr.Fields("doknr").Value.ToString
@@ -325,6 +331,11 @@ Public Class ProffixHelper
                 Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Löschen auf ZUS_DokFlightLink anhand DokNr:" + rs_doknr.Fields("doknr").Value.ToString + fehler)
                 Return False
             End If
+
+            'Dim sql_lager As String = String.Empty
+            'Dim rs_lager As New ADODB.Recordset
+            'Sql = "select "
+
 
             rs_doknr.MoveNext()
         End While
