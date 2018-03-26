@@ -160,7 +160,7 @@ Public Class Importer
             ' alle Flüge, die seit letzem erfolgreichem ImportDATUM verändert/erstellt wurden, herunterladen
             modifiedFlightsByDate = client.CallAsyncAsJArray(My.Settings.ServiceAPIModifiedFlightsMethod + lastFlightImport.ToString("yyyy-MM-dd"))
             modifiedFlightsByDate.Wait()
-            
+
             ' aus FLS kann nur anhand Datum geladen werden 
             '--> hier auch noch auf Zeit prüfen, ob nach letztem Flugdatenimport
             For Each flight As JObject In modifiedFlightsByDate.Result.Children()
@@ -280,7 +280,7 @@ Public Class Importer
                     InvokeLog("Fehler beim Löschen der Daten für DeliveryId " + delivery("DeliveryId").ToString)
                     Throw New Exception("Fehler beim Löschen der Daten für DeliveryId " + delivery("DeliveryId").ToString)
                     Return False
-                 End If
+                End If
 
                 ' prüfen, ob der Delivery die nötigen Daten enthält. Wenn nicht, kann dieser Delivery nicht importiert werden
                 If Not checkForCompleteDelivery(delivery) Then
@@ -605,10 +605,30 @@ Public Class Importer
             .ArtikelNr = lineItem("ArticleNumber").ToString,
             .Menge = CDec(lineItem("Quantity").ToString),
             .Rabatt = CDec(If(GetValOrDef(lineItem, "DiscountInPercent") = "", 0, lineItem("DiscountInPercent"))),
-        .Zusatzfelder = "Z_DeliveryId = '" + deliveryId + "', Z_DeliveryItemId = '" + GetValOrDef(lineItem, "DeliveryItemId") + "'"
+            .Zusatzfelder = "Z_DeliveryId = '" + deliveryId + "', Z_DeliveryItemId = '" + GetValOrDef(lineItem, "DeliveryItemId") + "'"
             }
+      
         '  .PositionNr = CInt(lineItem("Position")) * 10, ' st PosNr (Problem: wenn zu bestehendem hinzugefügt --> nicht bei 10 beginnen!!)
+        '.PreisSw = GetVerkauf1(lineItem("ArticleNumber").ToString),
 
+    End Function
+
+    Private Function GetVerkauf1(ByVal artikelNr As String) As Decimal
+        Dim sql As String = "select verkauf1 from lag_artikel where artikelnrlag = '" + artikelNr + "'"
+        Dim rs As New ADODB.Recordset
+        Dim fehler As String = String.Empty
+        Dim verkauf1 As Decimal
+
+        If Not MyConn.getRecord(rs, sql, fehler) Then
+            Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Laden des Verkaufspreis 1 von Artikel " + artikelNr)
+        End If
+
+        While Not rs.EOF
+            verkauf1 = CDec(rs.Fields("verkauf1").Value)
+            rs.MoveNext()
+        End While
+
+        Return verkauf1
     End Function
 
     ' erstellt eine TextPos, die einem Dok als TextPosition hinzugefügt werden kann
@@ -654,21 +674,32 @@ Public Class Importer
             ' das neu erstellte Dokument mit den erstellten Positionen in Proffix laden
             If Not Proffix.GoBook.AddDokument(docToEdit, newDocPositions.ToArray, {}, fehler) Then
                 Logger.GetInstance.Log(LogLevel.Exception, "Fehler in " + MethodBase.GetCurrentMethod().Name + " AddDokument() AdressNr: " + docToEdit.AdressNr.ToString + fehler)
+                ' AddDokument() hat true zurückgegeben
             Else
                 Logger.GetInstance.Log(LogLevel.Info, "Für die AdressNr: " + docToEdit.AdressNr.ToString + " wurde für das Flugdatum: " + docToEdit.Datum.ToString().Substring(0, 10) + " ein Dokument " + docToEdit.DokumentNr.ToString + " erstellt.")
                 InvokeLog("Für die AdressNr: " + docToEdit.AdressNr.ToString + " wurde für das Flugdatum: " + docToEdit.Datum.ToString().Substring(0, 10) + " ein Dokument " + docToEdit.DokumentNr.ToString + " erstellt.")
+
+                If fehler.Contains("Keine gültigen Adressangaben!") Then
+                    ' diese Fehlermeldung kann ignoriert werden, wenn AddDokument() true zurückgegeben hat
+                    Logger.GetInstance.Log(LogLevel.Exception, "pxBook Fehlermeldung wurde ignoriert, da true zurückgegeben wurde. Fehlermeldung: " + fehler)
+                    Return True
+                End If
             End If
         End If
 
         ' mögliche Fehler abfangen
         If Not String.IsNullOrEmpty(fehler) Then
-            InvokeLog(vbTab + "Beim Bearbeiten des " + If(docExistInProffix, "existierenden", "neu erstellten") + " Dokumentes ist ein Fehler aufgetreten. AdressNr: " + docToEdit.AdressNr.ToString + If(docExistInProffix, "DokumentNr: " + docToEdit.DokumentNr.ToString, ""))
-            Logger.GetInstance.Log(LogLevel.Exception, "Beim Bearbeiten des " + If(docExistInProffix, "existierenden", "neu erstellten") + " Dokumentes ist ein Fehler aufgetreten. AdressNr: " + docToEdit.AdressNr.ToString + If(docExistInProffix, "DokumentNr: " + docToEdit.DokumentNr.ToString, "") + " Fehler: " + fehler)
-            ' einige mögliche Fehler handeln
-            InvokeLog(fehler + " AdressNr: " + docToEdit.AdressNr.ToString)
+               ' einige mögliche Fehler handeln
+          
             If fehler.Contains("Kein Dokumenttyp gefunden!") Then
                 InvokeLog("Es existiert kein Dokumenttyp ""FLSLS"" in Proffix. Dieser muss erstellt werden, bevor neue Dokumente erstellt werden können")
-             End If
+            End If
+
+            InvokeLog(vbTab + "Beim Bearbeiten des " + If(docExistInProffix, "existierenden", "neu erstellten") + " Dokumentes ist ein Fehler aufgetreten. AdressNr: " + docToEdit.AdressNr.ToString + If(docExistInProffix, "DokumentNr: " + docToEdit.DokumentNr.ToString, ""))
+            Logger.GetInstance.Log(LogLevel.Exception, "Beim Bearbeiten des " + If(docExistInProffix, "existierenden", "neu erstellten") + " Dokumentes ist ein Fehler aufgetreten. AdressNr: " + docToEdit.AdressNr.ToString + If(docExistInProffix, "DokumentNr: " + docToEdit.DokumentNr.ToString, "") + " Fehler: " + fehler)
+            InvokeLog(vbTab + "pxBook Fehlermeldung: " + fehler)
+            Logger.GetInstance.Log(LogLevel.Exception, vbTab + "pxBook Fehlermeldung: " + fehler)
+
             Return False
         End If
 

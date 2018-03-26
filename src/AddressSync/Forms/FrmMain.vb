@@ -461,8 +461,8 @@ Public Class FrmMain
     ''' </summary>
     Private Sub SyncerWork()
         Try
-            MsgBox("Debug: Adresssync wird übersprungen. Syncer.Sync in FrmMain auskommentiert.")
-            ' syncsuccessful = Syncer.Sync()
+            '  MsgBox("Debug: Adresssync wird übersprungen. Syncer.Sync in FrmMain auskommentiert.")
+            syncsuccessful = Syncer.Sync()
         Catch exce As Exception
             'Den Fehler ausgeben und zurücksetzen
             Logger.GetInstance().Log(LogLevel.Critical, exce)
