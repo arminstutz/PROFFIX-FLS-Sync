@@ -378,7 +378,7 @@ Public Class FrmMain
 
     '*********************************************************************************Prozesse**********************************************************************************
     Private Sub DoLoadGeneralData()
-       
+
         Log("Laden allgemeiner Daten gestartet")
         Logger.GetInstance.Log(LogLevel.Info, "Allgemeine Daten werden geladen")
         If Not generalLoader.loadGeneralData() Then
@@ -496,7 +496,7 @@ Public Class FrmMain
             logException(SyncerException)
             'EndWork()
         End If
-       
+
         syncProcessFinished = True
         startNextProcess(If(SyncerException Is Nothing, False, True))
     End Sub
@@ -757,7 +757,7 @@ Public Class FrmMain
     '************************************************************************Button Clicks***********************************************************************************
 
     ' wenn Lieferscheine und Flüge synchronisert werden sollen, müssen die Adressen aktuell sein --> müssen ebenfalls synchronisiert werden
-     Private Sub cbLieferscheine_CheckedChanged(sender As Object, e As EventArgs) Handles cbLieferscheine.CheckedChanged
+    Private Sub cbLieferscheine_CheckedChanged(sender As Object, e As EventArgs) Handles cbLieferscheine.CheckedChanged
         If cbLieferscheine.Checked Then
             cbAdressen.Checked = True
         End If
@@ -766,7 +766,7 @@ Public Class FrmMain
     Private Sub cbFluege_CheckedChanged(sender As Object, e As EventArgs) Handles cbFluege.CheckedChanged
         If cbFluege.Checked Then
             cbAdressen.Checked = True
-          End If
+        End If
     End Sub
 
     ' Adressen müssen auch synchronisiert werden, wenn Lieferscheine erstellt bzw Flugdaten importiert werden sollen, da sonst Verknüpfung möglicherweise fehlt
@@ -797,11 +797,11 @@ Public Class FrmMain
     'End Sub
 
 
-        ''' <summary>
-        ''' Es wurde auf "Einstellungen" geklickt
-        ''' </summary>
-        ''' <param name="sender">Der Button</param>
-        ''' <param name="e">Informationen zum Event</param>
+    ''' <summary>
+    ''' Es wurde auf "Einstellungen" geklickt
+    ''' </summary>
+    ''' <param name="sender">Der Button</param>
+    ''' <param name="e">Informationen zum Event</param>
     Private Async Sub tsmiSettings_Click(ByVal sender As Object, ByVal e As EventArgs) Handles tsmiSettings.Click
         ' Form auf nicht anklickbar stellen
         enableFormElements(False)

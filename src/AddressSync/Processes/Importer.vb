@@ -447,59 +447,63 @@ Public Class Importer
         Dim adressNr As String = String.Empty
         Dim recipientPersonId As String = String.Empty
 
-        If logAusfuehrlich Then
-            Logger.GetInstance.Log(delivery.ToString)
-        End If
+        Try
+            If logAusfuehrlich Then
+                Logger.GetInstance.Log(delivery.ToString)
+            End If
 
-        If GetValOrDef(delivery, "RecipientDetails.PersonId") = "" Then
+            If GetValOrDef(delivery, "RecipientDetails.PersonId") = "" Then
 
-            Logger.GetInstance.Log(LogLevel.Exception, "Die PeronId für den Rechnungsempfänger konnte nicht geladen werden" + delivery.ToString)
-            InvokeLog(vbTab + "Fehler: Die PersonId für den Rechnungsempfänger konnte nicht geladen werden")
+                Logger.GetInstance.Log(LogLevel.Exception, "Die PeronId für den Rechnungsempfänger konnte nicht geladen werden" + delivery.ToString)
+                InvokeLog(vbTab + "Fehler: Die PersonId für den Rechnungsempfänger konnte nicht geladen werden")
+                Return False
+            End If
+
+            ' eine leere DokPos in Liste laden, damit 1. leer --> damit alle eigentlichen Positionen bei AddDokument in Proffix geladen werden (pxBook verlangt, dass 1. leer ist)
+            newDocPositions.Add(New pxBook.pxKommunikation.pxDokumentPos)
+
+            'AdressNr des Rechnungsempfängers auslesen
+            If delivery("RecipientDetails")("PersonId") Is Nothing Then
+                Throw New Exception("Kein Rechnungsempfänger definiert für DeliveryId: " + delivery("DeliveryId").ToString)
+            End If
+
+            ' existiert bereits ein Dok für diesen Tag für diesen Kunden?
+            ' gibt zu bearbeitendes Dok zurück (aus Proffix, oder neu erstellt) + setzt Flag docExistInProffix entsprechend
+            docToEdit = selectDocToEdit(delivery, docExistInProffix)
+            If docToEdit.AdressNr = 0 Then
+                InvokeLog(vbTab + "Fehler beim Erstellen eines neuen Dokumentes AdressNr: " + adressNr + " Flugdatum: " + If(delivery("FlightDate") IsNot Nothing, DateTime.Parse(delivery("FlightDate").ToString).ToShortDateString, ""))
+                Return False
+            End If
+
+            ' heutiges Datum beim Dok als Referenztext anhängen
+            'docToEdit.Referenztext += delivery("FlightDate").ToString
+
+            ' als erste DocPos eine Textpos hinzufügen mit DeliveryInfos (AircraftImmatriculation, FlightType) + AdditionalInfo
+            newTextPosition = createTextPos(delivery)
+            newDocPositions.Add(newTextPosition)
+
+            ' jeden Artikel des Deliveries durchgehen
+            ' TODO: OrderBy DeliveryItems.Position to sort the items as in the rules
+            For Each lineItem As JObject In delivery("DeliveryItems").Children()        '.OrderBy(delivery("DeliveryItems")("Position"))
+
+                ' aus LineItem ein DocPos erstellen und zu Liste der bereits neu erstellten hinzufügen
+                newDocPosition = createDocPos(docToEdit.DokumentNr, lineItem, deliveryId)
+                newDocPositions.Add(newDocPosition)
+            Next
+
+            ' Daten in Proffix laden und Dokument bearbeiten/erstellen
+            If Not loadDataInProffix(docExistInProffix, docToEdit, newDocPositions, deliveryId) Then
+                InvokeLog(vbTab + "Fehler beim Verarbeiten des Dokuments AdressNr: " + docToEdit.AdressNr.ToString + " Flugdatum: " + docToEdit.Datum)
+                Return False
+            End If
+
+            ' die ByRef Variable dokNr setzen (nötig für flagAsDelivered())
+            dokNr = docToEdit.DokumentNr
+            Return True
+        Catch ex As Exception
+            Logger.GetInstance.Log("Fehler in " + MethodBase.GetCurrentMethod.Name + " " + ex.Message)
             Return False
-        End If
-
-        ' eine leere DokPos in Liste laden, damit 1. leer --> damit alle eigentlichen Positionen bei AddDokument in Proffix geladen werden (pxBook verlangt, dass 1. leer ist)
-        newDocPositions.Add(New pxBook.pxKommunikation.pxDokumentPos)
-
-        'AdressNr des Rechnungsempfängers auslesen
-        If delivery("RecipientDetails")("PersonId") Is Nothing Then
-            Throw New Exception("Kein Rechnungsempfänger definiert für DeliveryId: " + delivery("DeliveryId").ToString)
-        End If
-
-        ' existiert bereits ein Dok für diesen Tag für diesen Kunden?
-        ' gibt zu bearbeitendes Dok zurück (aus Proffix, oder neu erstellt) + setzt Flag docExistInProffix entsprechend
-        docToEdit = selectDocToEdit(delivery, docExistInProffix)
-        If docToEdit.AdressNr = 0 Then
-            InvokeLog(vbTab + "Fehler beim Erstellen eines neuen Dokumentes AdressNr: " + adressNr + " Flugdatum: " + If(delivery("FlightDate") IsNot Nothing, DateTime.Parse(delivery("FlightDate").ToString).ToShortDateString, ""))
-            Return False
-        End If
-
-        ' heutiges Datum beim Dok als Referenztext anhängen
-        'docToEdit.Referenztext += delivery("FlightDate").ToString
-
-        ' als erste DocPos eine Textpos hinzufügen mit DeliveryInfos (AircraftImmatriculation, FlightType) + AdditionalInfo
-        newTextPosition = createTextPos(delivery)
-        newDocPositions.Add(newTextPosition)
-
-        ' jeden Artikel des Deliveries durchgehen
-        ' TODO: OrderBy DeliveryItems.Position to sort the items as in the rules
-        For Each lineItem As JObject In delivery("DeliveryItems").Children()        '.OrderBy(delivery("DeliveryItems")("Position"))
-
-            ' aus LineItem ein DocPos erstellen und zu Liste der bereits neu erstellten hinzufügen
-            newDocPosition = createDocPos(docToEdit.DokumentNr, lineItem, deliveryId)
-            newDocPositions.Add(newDocPosition)
-        Next
-
-        ' Daten in Proffix laden und Dokument bearbeiten/erstellen
-        If Not loadDataInProffix(docExistInProffix, docToEdit, newDocPositions, deliveryId) Then
-            InvokeLog(vbTab + "Fehler beim Verarbeiten des Dokuments AdressNr: " + docToEdit.AdressNr.ToString + " Flugdatum: " + docToEdit.Datum)
-            Return False
-        End If
-
-        ' die ByRef Variable dokNr setzen (nötig für flagAsDelivered())
-        dokNr = docToEdit.DokumentNr
-        Return True
-
+        End Try
     End Function
 
     '**************************************************************************Hilfsfunktionen*******************************************************************************
@@ -602,10 +606,10 @@ Public Class Importer
     Private Function createDocPos(ByVal dokNr As Integer, ByVal lineItem As JObject, ByVal deliveryId As String) As pxBook.pxKommunikation.pxDokumentPos
         Dim artikelNr As String = lineItem("ArticleNumber").ToString
         Dim menge As Decimal = CDec(lineItem("Quantity").ToString)
-        Dim preis As Decimal = GetVerkauf1(lineItem("ArticleNumber").ToString)
         Dim rabatt As Decimal = CDec(If(GetValOrDef(lineItem, "DiscountInPercent") = "", 0, lineItem("DiscountInPercent")))
         Dim zusatzfelder As String = "Z_DeliveryId = '" + deliveryId + "', Z_DeliveryItemId = '" + GetValOrDef(lineItem, "DeliveryItemId") + "'"
 
+        Dim preis As Decimal = GetVerkauf1(lineItem("ArticleNumber").ToString)
         Dim einheitpro As String
         Dim rgeinheit As String
         If Not GetEinheiten(artikelNr, einheitpro, rgeinheit) Then
@@ -614,6 +618,7 @@ Public Class Importer
 
         Dim docpos As New pxBook.pxKommunikation.pxDokumentPos
 
+        '  funktioniert, aber viele Werte müssen aus DB geladen werden
         With docpos
             .DokumentNr = dokNr
             .ArtikelNr = artikelNr
@@ -626,16 +631,28 @@ Public Class Importer
             .PreisFw = preis
             .Rabatt = rabatt
         End With
-        Return docpos
 
-        'Return New pxBook.pxKommunikation.pxDokumentPos With {
-        '    .DokumentNr = dokNr,
-        '    .ArtikelNr = artikelNr,
-        '    .Menge = menge,
-        '    .Zusatzfelder = zusatzfelder,
+        '' Variante, wie am wenigsten Werte für Pos geladen werden müssen, die Preise aber korrekt übernommen werden
+        ' funktioniert nicht
+        'With docpos
+        '    .Positionsart = pxBook.pxKommunikation.pxPositionsart.Artikel
+        '    .DokumentNr = dokNr
+        '    .ArtikelNr = artikelNr
+        '    .Menge = menge
+        'End With
+
+        ' hat früher funktioniert
+        'With docpos
+        '    .DokumentNr = dokNr
+        '    .ArtikelNr = artikelNr
+        '    .Menge = menge
+        '    .Zusatzfelder = zusatzfelder
         '    .Rabatt = rabatt
-        '}
-        '  .PositionNr = CInt(lineItem("Position")) * 10, ' st PosNr (Problem: wenn zu bestehendem hinzugefügt --> nicht bei 10 beginnen!!)
+        'End With
+
+     
+
+        Return docpos
 
     End Function
 
@@ -717,17 +734,19 @@ Public Class Importer
             For Each docpos In newDocPositions
                 If Not (docpos.ArtikelNr Is Nothing And docpos.Bezeichnung1 Is Nothing) Then
                     If Not Proffix.GoBook.AddDokumentPos(docToEdit.DokumentNr, docpos, fehler) Then
-                        Logger.GetInstance.Log(LogLevel.Exception, "Fehler in " + MethodBase.GetCurrentMethod().Name + " AdressNr: " + docToEdit.AdressNr.ToString + " Artikel: " + docpos.ArtikelNr + "für Dokument: " + docToEdit.DokumentNr.ToString + fehler)
+                        InvokeLog(vbTab + "Beim Bearbeiten des existierenden Dokumentes " + docpos.DokumentNr.ToString + " ist ein Fehler aufgetreten. Artikel: " + docpos.ArtikelNr)
+                        InvokeLog(vbTab + "Fehlermeldung: " + fehler)
+                        Logger.GetInstance.Log(LogLevel.Exception, "Fehler in pxbook.AddDokumentPos() AdressNr: " + docToEdit.AdressNr.ToString + " Artikel: " + docpos.ArtikelNr + "für Dokument: " + docToEdit.DokumentNr.ToString + " pxBook Fehlermeldung: " + fehler)
                         Return False
-                    End If
-
-                    InvokeLog("Der Artikel " + docpos.ArtikelNr + " " + If(docpos.Bezeichnung1 IsNot Nothing, docpos.Bezeichnung1, "") + " wurde als Dokumentposition zum Dokument " + docToEdit.DokumentNr.ToString + " hinzugefügt.")
-                    Logger.GetInstance.Log(LogLevel.Info, "Der Artikel " + docpos.ArtikelNr + " " + If(docpos.Bezeichnung1 IsNot Nothing, docpos.Bezeichnung1, "") + " wurde als Dokumentposition zum Dokument " + docToEdit.DokumentNr.ToString + " hinzugefügt.")
-                    If fehler.Contains("Keine gültigen Adressangaben!") Then
-                        ' diese Fehlermeldung kann ignoriert werden, wenn AddDokument() true zurückgegeben hat
-                        Logger.GetInstance.Log(LogLevel.Exception, "pxBook Fehlermeldung wurde ignoriert, da true zurückgegeben wurde. Fehlermeldung: " + fehler)
-                        Return True
-                    End If
+                    Else
+                        ' AddDokumentPos() gab return true
+                        InvokeLog("Der Artikel " + docpos.ArtikelNr + " " + If(docpos.Bezeichnung1 IsNot Nothing, docpos.Bezeichnung1, "") + " wurde als Dokumentposition zum Dokument " + docToEdit.DokumentNr.ToString + " hinzugefügt.")
+                        Logger.GetInstance.Log(LogLevel.Info, "Der Artikel " + docpos.ArtikelNr + " " + If(docpos.Bezeichnung1 IsNot Nothing, docpos.Bezeichnung1, "") + " wurde als Dokumentposition zum Dokument " + docToEdit.DokumentNr.ToString + " hinzugefügt.")
+                        If Not String.IsNullOrEmpty(fehler) Then
+                            ' diese Fehlermeldung kann ignoriert werden, wenn AddDokument() true zurückgegeben hat
+                            Logger.GetInstance.Log(LogLevel.Exception, "pxBook Fehlermeldung wurde ignoriert, da true zurückgegeben wurde. Fehlermeldung: " + fehler)
+                        End If
+                    End If                  
                 End If
             Next
 
@@ -735,38 +754,90 @@ Public Class Importer
         Else
             ' das neu erstellte Dokument mit den erstellten Positionen in Proffix laden
             If Not Proffix.GoBook.AddDokument(docToEdit, newDocPositions.ToArray, {}, fehler) Then
-                Logger.GetInstance.Log(LogLevel.Exception, "Fehler in " + MethodBase.GetCurrentMethod().Name + " AddDokument() AdressNr: " + docToEdit.AdressNr.ToString + fehler)
-                ' AddDokument() hat true zurückgegeben
+                If fehler.Contains("Kein Dokumenttyp gefunden!") Then
+                    InvokeLog(vbTab + "Es existiert kein Dokumenttyp ""FLSLS"" in Proffix. Dieser muss erstellt werden, bevor neue Dokumente erstellt werden können")
+                Else
+                    InvokeLog(vbTab + "Beim Bearbeiten des neu erstellten Dokumentes ist ein Fehler aufgetreten. AdressNr: " + docToEdit.AdressNr.ToString + " DokumentNr: " + docToEdit.DokumentNr.ToString + " pxBook Fehlermeldung: " + fehler)
+                    InvokeLog(vbTab + "Fehlermeldung: " + fehler)
+                End If
+                Logger.GetInstance.Log(LogLevel.Exception, "Fehler in pxbook.AddDokument() AdressNr: " + docToEdit.AdressNr.ToString + " pxBook Fehlermeldung: " + fehler)
+                Return False
+               
             Else
                 Logger.GetInstance.Log(LogLevel.Info, "Für die AdressNr: " + docToEdit.AdressNr.ToString + " wurde für das Flugdatum: " + docToEdit.Datum.ToString().Substring(0, 10) + " ein Dokument " + docToEdit.DokumentNr.ToString + " erstellt.")
                 InvokeLog("Für die AdressNr: " + docToEdit.AdressNr.ToString + " wurde für das Flugdatum: " + docToEdit.Datum.ToString().Substring(0, 10) + " ein Dokument " + docToEdit.DokumentNr.ToString + " erstellt.")
 
-                If fehler.Contains("Keine gültigen Adressangaben!") Then
-                    ' diese Fehlermeldung kann ignoriert werden, wenn AddDokument() true zurückgegeben hat
-                    Logger.GetInstance.Log(LogLevel.Exception, "pxBook Fehlermeldung wurde ignoriert, da true zurückgegeben wurde. Fehlermeldung: " + fehler)
-                    Return True
+                ' Doktotal kontrollieren (wenn 0, ob dies so ok ist)
+                If CheckDokTotal(docToEdit.DokumentNr) < 0 Then
+                    InvokeLog(vbTab + "Fehler beim Prüfen, ob für das erstellte Dokument die Preise gesetzt werden konnten.")
+                    Return False
                 End If
             End If
         End If
 
-        ' mögliche Fehler abfangen
-        If Not String.IsNullOrEmpty(fehler) Then
-               ' einige mögliche Fehler handeln
-          
-            If fehler.Contains("Kein Dokumenttyp gefunden!") Then
-                InvokeLog("Es existiert kein Dokumenttyp ""FLSLS"" in Proffix. Dieser muss erstellt werden, bevor neue Dokumente erstellt werden können")
-            End If
-
-            InvokeLog(vbTab + "Beim Bearbeiten des " + If(docExistInProffix, "existierenden", "neu erstellten") + " Dokumentes ist ein Fehler aufgetreten. AdressNr: " + docToEdit.AdressNr.ToString + If(docExistInProffix, "DokumentNr: " + docToEdit.DokumentNr.ToString, ""))
-            Logger.GetInstance.Log(LogLevel.Exception, "Beim Bearbeiten des " + If(docExistInProffix, "existierenden", "neu erstellten") + " Dokumentes ist ein Fehler aufgetreten. AdressNr: " + docToEdit.AdressNr.ToString + If(docExistInProffix, "DokumentNr: " + docToEdit.DokumentNr.ToString, "") + " Fehler: " + fehler)
-            InvokeLog(vbTab + "pxBook Fehlermeldung: " + fehler)
-            Logger.GetInstance.Log(LogLevel.Exception, vbTab + "pxBook Fehlermeldung: " + fehler)
-
-            Return False
-        End If
-
         Return True
     End Function
+
+    ' check if the total is > 0 and if = 0 if it is ok (as all articles have verkauf1 = 0)
+    ' return: -1 = error, 0 = ok, 1 = false
+    Private Function CheckDokTotal(ByVal dokNr As Integer) As Integer
+        Dim sql As String
+        Dim rs_total As New ADODB.Recordset
+        Dim rs_verkauf As New ADODB.Recordset
+        Dim fehler As String = String.Empty
+        Dim totalsw As Decimal = 0
+        Dim verkauf As Decimal = 0
+
+        Try
+
+            ' prüfen ob das Total des Docs > 0 ist
+            sql = "select totalsw from auf_dokumente where dokumentnrauf = " + dokNr.ToString
+            If Not MyConn.getRecord(rs_total, sql, fehler) Then
+                Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Prüfen des Totals für Dokument " + dokNr.ToString)
+                Return -1
+            End If
+            While Not rs_total.EOF
+                totalsw = CDec(rs_total.Fields("TotalSW").Value)
+                rs_total.MoveNext()
+            End While
+
+            ' das Dok hat ein Total > 0 = ok
+            If totalsw > 0 Then
+                Return 0
+
+                ' Das Dok hat ein Total = 0 --> prüfen, ob das so ok ist (wenn alle Artikel Verkauf1 = 0 haben=
+            Else
+                ' check if there is at least 1 article in the doc, which has a verkauf1 > 0
+                sql = "select sum(verkauf1) as verkauf from lag_artikel where artikelnrlag in (select distinct artikelnrlag from auf_dokumentpos where dokumentnrauf = " + dokNr.ToString + ")"
+                If Not MyConn.getRecord(rs_verkauf, sql, fehler) Then
+                    Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Bestimmen des Verkaufspreises der Artikel im Dok " + dokNr.ToString)
+                    Return -1
+                End If
+
+                While Not rs_verkauf.EOF
+                    verkauf = CInt(rs_verkauf.Fields("verkauf").Value)
+                    rs_verkauf.MoveNext()
+                End While
+
+                ' wenn keiner der Artikel einen Preis hat --> Total = 0 ist ok
+                If Not verkauf > 0 Then
+                    Return 0
+
+                    ' wenn mind. 1 der Artikel einen Verkauf1-Preis hat, ist Total = 0 falsch
+                Else
+                    MsgBox("Achtung: Das Dokument " + dokNr.ToString + " wurde zwar erstellt, die Preise der Artikel konnten jedoch nicht richtig gesetzt werden!", vbCritical)
+                    InvokeLog(vbTab + "Achtung: Das Dokument " + dokNr.ToString + " wurde zwar erstellt, die Preise der Artikel konnten jedoch nicht richtig gesetzt werden!")
+                    Logger.GetInstance.Log(LogLevel.Exception, "Dokument " + dokNr.ToString + " wurde zwar erstellt, die Preise konnten aber nicht richtig gesetzt werden")
+                    Return 1
+                End If
+            End If
+
+        Catch ex As Exception
+            Logger.GetInstance.Log(LogLevel.Exception, "Fehler in " + MethodBase.GetCurrentMethod.Name + " " + ex.Message)
+            Return -1
+        End Try
+    End Function
+
 
     ' erstellt ein JSON und setzt in FLS den Delivery mit der DeliveryId und betroffener DocNr als Delivered (= in Proffix erfasst, aber noch nicht bezahlt)
     Private Function flagAsDelivered(ByVal delivery As JObject, ByVal dokNr As Integer) As Boolean

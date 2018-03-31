@@ -293,6 +293,16 @@ Public Class ProffixHelper
             Logger.GetInstance.Log(LogLevel.Info, "Die Daten für die DeliveryId " + DeliveryId + " werden aus Proffix gelöscht.")
         End If
         '****************************************************************DocPos löschen************************************************************************
+        '' die docNr + PosNr für die zu löschenden DocPos zwischenspeichern um in LAG_Statistik die richtigen Positionen zu finden
+        'sql_pos = "select dokumentnrauf, artikelnr, mengeaus from AUF_DokumentPos where Z_DeliveryId = '" + DeliveryId + "'"
+        'If Not MyConn.getRecord(rs_pos_sel, sql_pos_sel, fehler) Then
+        '    Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Ermitteln der zu löschenden Positionen. DeliveryId: " + DeliveryId + fehler)
+        '    Return False
+        'End If
+
+        ' TODO Lagerabtrag rückgängig machen, falls in AUF_Doktypen für "Lieferschein" lagerabtrag = 1 gilt. Problem: Derselbe Artikel kann in 1 Dok in mehreren Positionen vorkommen 
+        ' --> in LAG_Statistik kann man den zugehörigen Datensatz nciht identifizieren --> es würde jedesmal beim Funktionsaufruf die Menge abgezogen, solange es diesen Artikel auf dem Dok hat
+
         sql_pos = "Delete from AUF_DokumentPos where Z_DeliveryId = '" + DeliveryId + "'"
         If Not MyConn.getRecord(rs_pos, sql_pos, fehler) Then
             Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Löschen der Positionen. DeliveryId: " + DeliveryId + fehler)
@@ -313,11 +323,6 @@ Public Class ProffixHelper
         While Not rs_doknr.EOF
             Dim dokNr As Integer = CInt(rs_doknr.Fields("doknr").Value)
 
-            '' Dokument löschen, da die
-            'If Not Proffix.GoBook.DelDokument(doknr, fehler) Then
-            '    Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Löschen des Dokumentes " + doknr.tostring)
-            'End If
-
             ' Doc mit DokNr löschen
             sql_delete = "Delete from auf_dokumente where dokumentnrauf = " + rs_doknr.Fields("doknr").Value.ToString
             If Not MyConn.getRecord(rs_delete, sql_delete, fehler) Then
@@ -331,11 +336,6 @@ Public Class ProffixHelper
                 Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Löschen auf ZUS_DokFlightLink anhand DokNr:" + rs_doknr.Fields("doknr").Value.ToString + fehler)
                 Return False
             End If
-
-            'Dim sql_lager As String = String.Empty
-            'Dim rs_lager As New ADODB.Recordset
-            'Sql = "select "
-
 
             rs_doknr.MoveNext()
         End While
