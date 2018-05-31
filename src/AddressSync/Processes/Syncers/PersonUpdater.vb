@@ -169,7 +169,7 @@ Public Class PersonUpdater
         person = personMapper.Mapp(address, person)
 
         '' clubRel Werte updaten
-        person = ClubMapper.Mapp(address, person)
+        person = clubMapper.Mapp(address, person)
 
         ' möglicherweise falsche MemberNr/AdressNr in FLS wieder synchronisieren
         person("ClubRelatedPersonDetails")("MemberNumber") = address.AdressNr
@@ -218,7 +218,7 @@ Public Class PersonUpdater
 
     ' schreibt in Log und in Logger (File)
     Private Sub logComplete(ByVal logString As String, ByVal loglevel As LogLevel, Optional ByVal zusatzloggerString As String = "")
-        If Log IsNot Nothing Then Log.Invoke(If(loglevel <> loglevel.Info, vbTab, "") + logString)
+        If Log IsNot Nothing Then Log.Invoke(If(loglevel <> LogLevel.Info, vbTab, "") + logString)
         Logger.GetInstance.Log(loglevel, logString + " " + zusatzloggerString)
     End Sub
 

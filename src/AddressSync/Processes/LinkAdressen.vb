@@ -299,7 +299,7 @@ Public Class LinkAdressen
             'End If
 
             ' PersonId aus FLS in PX schreiben
-            If Not pxAktualisieren(person("PersonId").tostring.tolower.trim, adressNr) Then
+            If Not pxAktualisieren(person("PersonId").ToString.ToLower.Trim, adressNr) Then
                 Throw New Exception("Fehler in pxAktualisieren")
             End If
 

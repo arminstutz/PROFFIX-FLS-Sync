@@ -226,6 +226,38 @@ Public Class Importer
 
 
 
+    Private Function TestFunktionGetBeispielDeliveries() As Threading.Tasks.Task(Of JArray)
+        Dim filetext As New List(Of String)
+        Dim path As String = "C:\Workspace\Projekte_inArbeit\FLS\AddressSync\BeispielDeliveries.txt"
+        filetext = ReadFile(path)
+
+        '  Dim str As String
+        ' str = String.Join(Char(13), filetext)
+       
+    End Function
+    Private Function ReadFile(ByVal path As String) As List(Of String)
+        Dim filetext As New List(Of String)
+        Dim reader As StreamReader
+        Try
+            reader = New StreamReader(path)
+        Catch ex As Exception
+            MsgBox("Datei " + path + " wurde nicht gefunden")
+            Return Nothing
+        End Try
+
+        Dim sLine As String = ""
+        ' Dim iniLine As String = ""
+
+        ' Zeile zu key aus Ini auslesen
+        Do
+            sLine = reader.ReadLine()
+            filetext.Add(sLine)
+        Loop Until sLine Is Nothing
+        reader.Close()
+
+       Return filetext
+
+    End Function
 
 
 
@@ -258,6 +290,9 @@ Public Class Importer
             deliveries = client.CallAsyncAsJArray(My.Settings.ServiceAPIDeliveriesNotProcessedMethod)
             deliveries.Wait()
 
+            ' Debug
+            ' deliveries = TestFunktionGetBeispielDeliveries()
+
             DeliveryCount = deliveries.Result.Children.Count
             ProgressDelivery = 0
             InvokeDoProgressDelivery()
@@ -274,6 +309,7 @@ Public Class Importer
             'Iteration durch die Flüge, die zu verrechnen sind
             'TODO: OrderBy PersonId and Startdate of flight
             For Each delivery As JObject In deliveries.Result.Children()
+
                 dokNr = 0
                 ' von abgebrochenen Lieferscheinimporten vorhandene Daten für die DeliveryId löschen
                 If Not pxhelper.deleteIncompleteDeliveryData(delivery("DeliveryId").ToString) Then
@@ -329,8 +365,8 @@ Public Class Importer
 
                 ' wenn dokNr noch 0 ist --> Fehler = es wurde kein Dok erstellt
                 If dokNr = 0 Then
-                    InvokeLog(vbTab + "Fehler beim Auslesen der neuen DokumentNr des in Proffix neu erstellten Dokuments AdressNr: " + pxhelper.GetAdressNr(GetValOrDef(delivery, "RecipientDetails.PersonId")) + " Flugdatum: " + GetValOrDef(delivery, "FlightInformation.FlightDate"))
-                    Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Auslesen der neuen DokumentNr des in Proffix neu erstellten Dokuments AdressNr: " + pxhelper.GetAdressNr(GetValOrDef(delivery, "RecipientDetails.PersonId")) + " Flugdatum: " + GetValOrDef(delivery, "FlightInformation.FlightDate"))
+                    InvokeLog(vbTab + "Fehler beim Auslesen der neuen DokumentNr des in Proffix neu erstellten Dokuments AdressNr: " + If(GetValOrDef(delivery, "RecipientDetails.PersonId") = "", GetValOrDef(delivery, "RecipientDetails.PersonClubMemberNumber"), pxhelper.GetAdressNr(GetValOrDef(delivery, "RecipientDetails.PersonId"))) + " Flugdatum: " + GetValOrDef(delivery, "FlightInformation.FlightDate"))
+                    Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Auslesen der neuen DokumentNr des in Proffix neu erstellten Dokuments AdressNr: " + If(GetValOrDef(delivery, "RecipientDetails.PersonId") = "", GetValOrDef(delivery, "RecipientDetails.PersonClubMemberNumber"), pxhelper.GetAdressNr(GetValOrDef(delivery, "RecipientDetails.PersonId"))) + " Flugdatum: " + GetValOrDef(delivery, "FlightInformation.FlightDate"))
                     Return False
                 End If
 
@@ -396,9 +432,11 @@ Public Class Importer
 
         ' prüfen, ob eine PersonId für Rechnungsempfänger vorhanden ist
         If GetValOrDef(delivery, "RecipientDetails.PersonId") = "" Then
-            fehlerbekannt = True
-            If Not pxhelper.InFehlertabelleSchreiben(delivery, "Lieferschein aus FLS enthält keine PersonId als Rechnungsempfänger") Then
-                Return False
+            If GetValOrDef(delivery, "RecipientDetails.PersonClubMemberNumber") = "" Then
+                fehlerBekannt = True
+                If Not pxhelper.InFehlertabelleSchreiben(delivery, "Lieferschein aus FLS enthält weder eine PersonId noch eine MemberNumberals Rechnungsempfänger") Then
+                    Return False
+                End If
             End If
         End If
 
@@ -453,19 +491,21 @@ Public Class Importer
             End If
 
             If GetValOrDef(delivery, "RecipientDetails.PersonId") = "" Then
+                If GetValOrDef(delivery, "RecipientDetails.PersonClubMemberNumber") = "" Then
 
-                Logger.GetInstance.Log(LogLevel.Exception, "Die PeronId für den Rechnungsempfänger konnte nicht geladen werden" + delivery.ToString)
-                InvokeLog(vbTab + "Fehler: Die PersonId für den Rechnungsempfänger konnte nicht geladen werden")
-                Return False
+                    Logger.GetInstance.Log(LogLevel.Exception, "Weder die PeronId noch die MemberNumber für den Rechnungsempfänger konnte geladen werden" + delivery.ToString)
+                    InvokeLog(vbTab + "Fehler: Weder die PersonId noch die MemberNumber für den Rechnungsempfänger konnte geladen werden")
+                    Return False
+                End If
             End If
 
             ' eine leere DokPos in Liste laden, damit 1. leer --> damit alle eigentlichen Positionen bei AddDokument in Proffix geladen werden (pxBook verlangt, dass 1. leer ist)
             newDocPositions.Add(New pxBook.pxKommunikation.pxDokumentPos)
 
-            'AdressNr des Rechnungsempfängers auslesen
-            If delivery("RecipientDetails")("PersonId") Is Nothing Then
-                Throw New Exception("Kein Rechnungsempfänger definiert für DeliveryId: " + delivery("DeliveryId").ToString)
-            End If
+            ''AdressNr des Rechnungsempfängers auslesen
+            'If delivery("RecipientDetails")("PersonId") Is Nothing Then
+            '    Throw New Exception("Kein Rechnungsempfänger definiert für DeliveryId: " + delivery("DeliveryId").ToString)
+            'End If
 
             ' existiert bereits ein Dok für diesen Tag für diesen Kunden?
             ' gibt zu bearbeitendes Dok zurück (aus Proffix, oder neu erstellt) + setzt Flag docExistInProffix entsprechend
@@ -488,6 +528,11 @@ Public Class Importer
 
                 ' aus LineItem ein DocPos erstellen und zu Liste der bereits neu erstellten hinzufügen
                 newDocPosition = createDocPos(docToEdit.DokumentNr, lineItem, deliveryId)
+                If newDocPosition.ArtikelNr = String.Empty Then
+                    InvokeLog(vbTab + "Fehler beim Erstellen der Dokumentposition")
+                    Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Erstellen der Dokumentposition aus " + lineItem.ToString)
+                    Return False
+                End If
                 newDocPositions.Add(newDocPosition)
             Next
 
@@ -525,7 +570,14 @@ Public Class Importer
         Dim flightDate As Date
 
         Try
-            adressNr = pxhelper.GetAdressNr(delivery("RecipientDetails")("PersonId").ToString)
+            ' AdressNr auslesen
+            If GetValOrDef(delivery, "RecipientDetails.PersonId") <> "" Then
+                ' PersonId auslesen und die dazugehörige AdressNr aus PX laden
+                adressNr = pxhelper.GetAdressNr(delivery("RecipientDetails")("PersonId").ToString)
+            Else
+                ' AdressNr direkt auslesen, da PersonId fehlt
+                adressNr = GetValOrDef(delivery, "RecipientDetails.PersonClubMemberNumber")
+            End If
 
             ' wenn kein FlightDatum enthalten, da z.B. Jahrespauschale --> heute als Datum
             If GetValOrDef(delivery, "FlightInformation.FlightDate") = "" Then
@@ -536,13 +588,13 @@ Public Class Importer
             End If
 
             ' ist bereits ein FLS-Dok vorhanden für den Tag/Kunden, welches noch nicht weiterverarbeitet (RG) wurde
-            sql = "select auf_dokumente.dokumentnrauf from auf_dokumente left join auf_doklink on auf_dokumente.dokumentnrauf = auf_doklink.dokumentnrauf where " + _
-                            "auf_dokumente.doktypauf = 'FLSLS' and " + _
-                            "auf_dokumente.adressNradr = " + adressNr + " and " + _
-                            "auf_dokumente.datum = '" + flightDate.ToString(pxhelper.dateformat) + "' and " + _
+            sql = "select auf_dokumente.dokumentnrauf from auf_dokumente left join auf_doklink on auf_dokumente.dokumentnrauf = auf_doklink.dokumentnrauf where " +
+                            "auf_dokumente.doktypauf = 'FLSLS' and " +
+                            "auf_dokumente.adressNradr = " + adressNr + " and " +
+                            "auf_dokumente.datum = '" + flightDate.ToString(pxhelper.dateformat) + "' and " +
                             "auf_doklink.dokumentnrauf is null"
             If Not MyConn.getRecord(rs, sql, fehler) Then
-                Throw New Exception("Fehler beim Abfragen, ob bereits Dok vorhanden für AdressNr " + pxhelper.GetAdressNr(delivery("RecipientDetails")("PersonId").ToString) + " und Datum " + DateTime.Parse(delivery("FlightDate").ToString).ToString(pxhelper.dateformat) + " " + fehler)
+                Throw New Exception("Fehler beim Abfragen, ob bereits Dok vorhanden für AdressNr " + If(GetValOrDef(delivery, "RecipientDetails.PersonId") = "", GetValOrDef(delivery, "RecipientDetails.PersonClubMemberNumber"), pxhelper.GetAdressNr(delivery("RecipientDetails")("PersonId").ToString)) + " und Datum " + DateTime.Parse(delivery("FlightDate").ToString).ToString(pxhelper.dateformat) + " " + fehler)
             End If
 
             ' für alle gefundenen Dokumente
@@ -582,7 +634,11 @@ Public Class Importer
 
         Try
             ' Werte für Dokument setzen:
-            doc.AdressNr = CInt(pxhelper.GetAdressNr(delivery("RecipientDetails")("PersonId").ToString))
+            If GetValOrDef(delivery, "RecipientDetails.PersonId") <> "" Then
+                doc.AdressNr = CInt(pxhelper.GetAdressNr(delivery("RecipientDetails")("PersonId").ToString))
+            Else
+                doc.AdressNr = CInt(GetValOrDef(delivery, "RecipientDetails.PersonClubMemberNumber"))
+            End If
             doc.DokumentTyp = "FLSLS"
 
             If GetValOrDef(delivery, "FlightInformation.FlightDate") = "" Then
@@ -609,28 +665,29 @@ Public Class Importer
         Dim rabatt As Decimal = CDec(If(GetValOrDef(lineItem, "DiscountInPercent") = "", 0, lineItem("DiscountInPercent")))
         Dim zusatzfelder As String = "Z_DeliveryId = '" + deliveryId + "', Z_DeliveryItemId = '" + GetValOrDef(lineItem, "DeliveryItemId") + "'"
 
-        Dim preis As Decimal = GetVerkauf1(lineItem("ArticleNumber").ToString)
-        Dim einheitpro As String
-        Dim rgeinheit As String
-        If Not GetEinheiten(artikelNr, einheitpro, rgeinheit) Then
-            Return Nothing
-        End If
-
         Dim docpos As New pxBook.pxKommunikation.pxDokumentPos
 
-        '  funktioniert, aber viele Werte müssen aus DB geladen werden
+        'Dim einheitpro As String = String.Empty
+        'Dim rgeinheit As String = String.Empty
+        'If Not GetEinheiten(artikelNr, einheitpro, rgeinheit) Then
+        '    Return Nothing
+        'End If
+
+        '  dim preis as decimal = GetVerkauf1(lineItem("ArticleNumber").ToString)
+
         With docpos
             .DokumentNr = dokNr
             .ArtikelNr = artikelNr
-            .Menge = menge
-            .MengeVerr = menge
-            .Zusatzfelder = zusatzfelder
-            .Lagereinheit = einheitpro
-            .Rechnungseinheit = rgeinheit
-            .PreisSw = preis
-            .PreisFw = preis
+            .Menge = menge    ' wenn in JSON Menge = 0 --> 1, anosnten die im JSON angegebene Menge
             .Rabatt = rabatt
+            .Zusatzfelder = zusatzfelder
         End With
+        ' bisher funktionierte es nur, wenn auch folgende Werte geladen wurden
+        '  .MengeVerr = menge 'If(menge > 0, menge, 1)
+        '   .Lagereinheit = einheitpro
+        '  .Rechnungseinheit = rgeinheit
+        '    .PreisSw = preis
+        '    .PreisFw = preis
 
         '' Variante, wie am wenigsten Werte für Pos geladen werden müssen, die Preise aber korrekt übernommen werden
         ' funktioniert nicht
@@ -650,7 +707,30 @@ Public Class Importer
         '    .Rabatt = rabatt
         'End With
 
-     
+        ' ' Debug Tests für Preis = 0 (JSON gibt mir in dem Fall Menge = 0)
+        ' ' für alle Pos ausser 1 werden Testeshalber Menge = 0 gesetzt
+        'If CInt(GetValOrDef(lineItem, "Position")) > 1 Then
+        '    menge = 0
+        '    With docpos
+        '        .Menge = 0
+        '        .MengeVerr = 0
+        '        .PreisSw = 0
+        '        .PreisFw = 0
+        '        .TotalSw = 0
+        '        .TotalFw = 0
+        '    End With
+        '    '    If CInt(GetValOrDef(lineItem, "Position")) > 2 Then
+        '    '        With docpos
+        '    '            .Menge = 1
+        '    '            .MengeVerr = 1
+        '    '            .PreisSw = CDec(0.0)
+        '    '            .PreisFw = CDec(0.0)
+        '    '            .TotalSw = 0
+        '    '            .TotalFw = 0
+        '    '        End With
+
+        '    '    End If
+        'End If
 
         Return docpos
 
@@ -746,7 +826,7 @@ Public Class Importer
                             ' diese Fehlermeldung kann ignoriert werden, wenn AddDokument() true zurückgegeben hat
                             Logger.GetInstance.Log(LogLevel.Exception, "pxBook Fehlermeldung wurde ignoriert, da true zurückgegeben wurde. Fehlermeldung: " + fehler)
                         End If
-                    End If                  
+                    End If
                 End If
             Next
 
@@ -762,7 +842,7 @@ Public Class Importer
                 End If
                 Logger.GetInstance.Log(LogLevel.Exception, "Fehler in pxbook.AddDokument() AdressNr: " + docToEdit.AdressNr.ToString + " pxBook Fehlermeldung: " + fehler)
                 Return False
-               
+
             Else
                 Logger.GetInstance.Log(LogLevel.Info, "Für die AdressNr: " + docToEdit.AdressNr.ToString + " wurde für das Flugdatum: " + docToEdit.Datum.ToString().Substring(0, 10) + " ein Dokument " + docToEdit.DokumentNr.ToString + " erstellt.")
                 InvokeLog("Für die AdressNr: " + docToEdit.AdressNr.ToString + " wurde für das Flugdatum: " + docToEdit.Datum.ToString().Substring(0, 10) + " ein Dokument " + docToEdit.DokumentNr.ToString + " erstellt.")
@@ -805,7 +885,7 @@ Public Class Importer
             If totalsw > 0 Then
                 Return 0
 
-                ' Das Dok hat ein Total = 0 --> prüfen, ob das so ok ist (wenn alle Artikel Verkauf1 = 0 haben=
+                ' Das Dok hat ein Total = 0 --> prüfen, ob das so ok ist (wenn alle Artikel Verkauf1 = 0 haben)
             Else
                 ' check if there is at least 1 article in the doc, which has a verkauf1 > 0
                 sql = "select sum(verkauf1) as verkauf from lag_artikel where artikelnrlag in (select distinct artikelnrlag from auf_dokumentpos where dokumentnrauf = " + dokNr.ToString + ")"
@@ -898,11 +978,13 @@ Public Class Importer
             Return False
         End If
 
-        ' prüfen, ob eine PersonId für Rechnungsempfänger vorhanden ist
+        ' prüfen, ob eine PersonId oder MemberNumber für Rechnungsempfänger vorhanden ist
         If GetValOrDef(delivery, "RecipientDetails.PersonId") = "" Then
-            InvokeLog(vbTab + "Fehler: Der Lieferschein aus FLS enthält keine PersonId für den Rechnungsempfänger. DeliveryId: " + delivery("DeliveryId").ToString)
-            Logger.GetInstance.Log(LogLevel.Exception, "Lieferschein ohne RecipientDetails.PersonId: " + delivery.ToString)
-            Return False
+            If GetValOrDef(delivery, "RecipientDetails.PersonClubMemberNumber") = "" Then
+                InvokeLog(vbTab + "Fehler: Der Lieferschein aus FLS enthält weder eine PersonId noch eine MenberNumber für den Rechnungsempfänger. DeliveryId: " + delivery("DeliveryId").ToString)
+                Logger.GetInstance.Log(LogLevel.Exception, "Lieferschein ohne Rechnungesmpfänger: PersonId und MemberNumber. " + delivery.ToString)
+                Return False
+            End If
         End If
 
         ' prüfen, ob delivery überhaupt Artikel enthält (wenn nicht, ist nicht definiert, welche Artikel mit diesem Flug verknüpft sind

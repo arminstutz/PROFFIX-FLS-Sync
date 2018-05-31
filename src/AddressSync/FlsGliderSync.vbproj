@@ -140,6 +140,7 @@
     <Import Include="System.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BeispielDeliveries.vb" />
     <Compile Include="Forms\FrmFlightImport.Designer.vb">
       <DependentUpon>FrmFlightImport.vb</DependentUpon>
     </Compile>
@@ -235,6 +236,7 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="BeispielDeliveries.txt" />
     <None Include="ClassDiagram1.cd" />
     <None Include="My Project\app.manifest" />
     <None Include="My Project\Application.myapp">
