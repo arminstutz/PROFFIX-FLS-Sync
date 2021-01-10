@@ -226,15 +226,15 @@ Public Class Importer
 
 
 
-    Private Function TestFunktionGetBeispielDeliveries() As Threading.Tasks.Task(Of JArray)
-        Dim filetext As New List(Of String)
-        Dim path As String = "C:\Workspace\Projekte_inArbeit\FLS\AddressSync\BeispielDeliveries.txt"
-        filetext = ReadFile(path)
+    'Private Function TestFunktionGetBeispielDeliveries() As Threading.Tasks.Task(Of JArray)
+    '    Dim filetext As New List(Of String)
+    '    Dim path As String = "C:\Workspace\Projekte_inArbeit\FLS\AddressSync\BeispielDeliveries.txt"
+    '    filetext = ReadFile(path)
 
-        '  Dim str As String
-        ' str = String.Join(Char(13), filetext)
-       
-    End Function
+    '    '  Dim str As String
+    '    ' str = String.Join(Char(13), filetext)
+
+    'End Function
     Private Function ReadFile(ByVal path As String) As List(Of String)
         Dim filetext As New List(Of String)
         Dim reader As StreamReader
