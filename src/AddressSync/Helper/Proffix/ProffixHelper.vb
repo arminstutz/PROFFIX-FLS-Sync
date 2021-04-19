@@ -179,7 +179,7 @@ Public Class ProffixHelper
             End If
 
 
-            Logger.GetInstance.Log(LogLevel.Info, "LaufNr:" & nextNr)
+            '  Logger.GetInstance.Log(LogLevel.Info, "LaufNr:" & nextNr)
 
             Return nextNr
 
