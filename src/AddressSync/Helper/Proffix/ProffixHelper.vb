@@ -951,37 +951,37 @@ Public Class ProffixHelper
     ''' <returns>Der SQL String</returns>
     Public Shared Function CreateZusatzFelderSql(ByVal source As pxKommunikation.pxAdressen) As String
         'Definieren der Zusatzfelder liste
-        Dim values As New Dictionary(Of String, String)
-
-        values.Add("Z_Segelfluglehrer_Lizenz", GetZusatzFelder(source, "Z_Segelfluglehrer_Lizenz"))
-        values.Add("Z_Segelflugpilot_Lizenz", GetZusatzFelder(source, "Z_Segelflugpilot_Lizenz"))
-        values.Add("Z_Segelflugschueler_Lizenz", GetZusatzFelder(source, "Z_Segelflugschueler_Lizenz"))
-        values.Add("Z_Motorflugpilot_Lizenz", GetZusatzFelder(source, "Z_Motorflugpilot_Lizenz"))
-        values.Add("Z_Schleppilot_Lizenz", GetZusatzFelder(source, "Z_Schleppilot_Lizenz"))
-        values.Add("Z_Segelflugpassagier_Lizenz", GetZusatzFelder(source, "Z_Segelflugpassagier_Lizenz"))
-        values.Add("Z_TMG_Lizenz", GetZusatzFelder(source, "Z_TMG_Lizenz"))
-        values.Add("Z_Windenfuehrer_Lizenz", GetZusatzFelder(source, "Z_Windenfuehrer_Lizenz"))
-        values.Add("Z_Motorfluglehrer_Lizenz", GetZusatzFelder(source, "Z_Motorfluglehrer_Lizenz"))
-        values.Add("Z_Schleppstart_Zulassung", GetZusatzFelder(source, "Z_Schleppstart_Zulassung"))
-        values.Add("Z_Eigenstart_Zulassung", GetZusatzFelder(source, "Z_Eigenstart_Zulassung"))
-        values.Add("Z_Windenstart_Zulassung", GetZusatzFelder(source, "Z_Windenstart_Zulassung"))
-        values.Add("Z_SpotURL", "'" + GetZusatzFelder(source, "Z_SpotURL") + "'")
-        values.Add("Z_Email_Geschaeft", "'" + GetZusatzFelder(source, "Z_Email_Geschaeft") + "'")
-        values.Add("Z_Lizenznummer", "'" + GetZusatzFelder(source, "Z_Lizenznummer") + "'")
-        values.Add("Z_FLSPersonId", "'" + GetZusatzFelder(source, "Z_FLSPersonId") + "'")
-        values.Add("Z_Segelflugpilot", GetZusatzFelder(source, "Z_Segelflugpilot"))
-        values.Add("Z_Segelfluglehrer", GetZusatzFelder(source, "Z_Segelfluglehrer"))
-        values.Add("Z_Segelflugschueler", GetZusatzFelder(source, "Z_Segelflugschueler"))
-        values.Add("Z_Motorflugpilot", GetZusatzFelder(source, "Z_Motorflugpilot"))
-        values.Add("Z_Motorfluglehrer", GetZusatzFelder(source, "Z_Motorfluglehrer"))
-        values.Add("Z_Passagier", GetZusatzFelder(source, "Z_Passagier"))
-        values.Add("Z_Schleppilot", GetZusatzFelder(source, "Z_Schleppilot"))
-        values.Add("Z_Windenfuehrer", GetZusatzFelder(source, "Z_Windenfuehrer"))
-        values.Add("Z_erhaeltFlugreport", GetZusatzFelder(source, "Z_erhaeltFlugreport"))
-        values.Add("Z_erhaeltReservationsmeldung", GetZusatzFelder(source, "Z_erhaeltReservationsmeldung"))
-        values.Add("Z_erhaeltPlanungserinnerung", GetZusatzFelder(source, "Z_erhaeltPlanungserinnerung"))
-        values.Add("Z_erhaeltFlugStatistikenZuEigenen", GetZusatzFelder(source, "Z_erhaeltFlugStatistikenZuEigenen"))
-        values.Add("Z_MemberStateId", "'" + GetZusatzFelder(source, "Z_MemberStateId") + "'")
+        Dim values As New Dictionary(Of String, String) From {
+            {"Z_Segelfluglehrer_Lizenz", GetZusatzFelder(source, "Z_Segelfluglehrer_Lizenz")},
+            {"Z_Segelflugpilot_Lizenz", GetZusatzFelder(source, "Z_Segelflugpilot_Lizenz")},
+            {"Z_Segelflugschueler_Lizenz", GetZusatzFelder(source, "Z_Segelflugschueler_Lizenz")},
+            {"Z_Motorflugpilot_Lizenz", GetZusatzFelder(source, "Z_Motorflugpilot_Lizenz")},
+            {"Z_Schleppilot_Lizenz", GetZusatzFelder(source, "Z_Schleppilot_Lizenz")},
+            {"Z_Segelflugpassagier_Lizenz", GetZusatzFelder(source, "Z_Segelflugpassagier_Lizenz")},
+            {"Z_TMG_Lizenz", GetZusatzFelder(source, "Z_TMG_Lizenz")},
+            {"Z_Windenfuehrer_Lizenz", GetZusatzFelder(source, "Z_Windenfuehrer_Lizenz")},
+            {"Z_Motorfluglehrer_Lizenz", GetZusatzFelder(source, "Z_Motorfluglehrer_Lizenz")},
+            {"Z_Schleppstart_Zulassung", GetZusatzFelder(source, "Z_Schleppstart_Zulassung")},
+            {"Z_Eigenstart_Zulassung", GetZusatzFelder(source, "Z_Eigenstart_Zulassung")},
+            {"Z_Windenstart_Zulassung", GetZusatzFelder(source, "Z_Windenstart_Zulassung")},
+            {"Z_SpotURL", "'" + GetZusatzFelder(source, "Z_SpotURL") + "'"},
+            {"Z_Email_Geschaeft", "'" + GetZusatzFelder(source, "Z_Email_Geschaeft") + "'"},
+            {"Z_Lizenznummer", "'" + GetZusatzFelder(source, "Z_Lizenznummer") + "'"},
+            {"Z_FLSPersonId", "'" + GetZusatzFelder(source, "Z_FLSPersonId") + "'"},
+            {"Z_Segelflugpilot", GetZusatzFelder(source, "Z_Segelflugpilot")},
+            {"Z_Segelfluglehrer", GetZusatzFelder(source, "Z_Segelfluglehrer")},
+            {"Z_Segelflugschueler", GetZusatzFelder(source, "Z_Segelflugschueler")},
+            {"Z_Motorflugpilot", GetZusatzFelder(source, "Z_Motorflugpilot")},
+            {"Z_Motorfluglehrer", GetZusatzFelder(source, "Z_Motorfluglehrer")},
+            {"Z_Passagier", GetZusatzFelder(source, "Z_Passagier")},
+            {"Z_Schleppilot", GetZusatzFelder(source, "Z_Schleppilot")},
+            {"Z_Windenfuehrer", GetZusatzFelder(source, "Z_Windenfuehrer")},
+            {"Z_erhaeltFlugreport", GetZusatzFelder(source, "Z_erhaeltFlugreport")},
+            {"Z_erhaeltReservationsmeldung", GetZusatzFelder(source, "Z_erhaeltReservationsmeldung")},
+            {"Z_erhaeltPlanungserinnerung", GetZusatzFelder(source, "Z_erhaeltPlanungserinnerung")},
+            {"Z_erhaeltFlugStatistikenZuEigenen", GetZusatzFelder(source, "Z_erhaeltFlugStatistikenZuEigenen")},
+            {"Z_MemberStateId", "'" + GetZusatzFelder(source, "Z_MemberStateId") + "'"}
+        }
 
         'Umwandeln des Dictionary in ein SQL String
         Dim sql As String = String.Empty

@@ -6,12 +6,12 @@ Public Class ArticleMapper
     ' Dictionary der Felder, die im FLS <-> Proffix entsprechen
     Private ReadOnly Property MappingProperties As Dictionary(Of String, String)
         Get
-            Dim articleProperties_dict = New Dictionary(Of String, String)
-            articleProperties_dict.Add("ArticleNumber", "ArtikelNr")
-            articleProperties_dict.Add("ArticleName", "Bezeichnung1")
-            articleProperties_dict.Add("ArticleInfo", "Bezeichnung2")
-            articleProperties_dict.Add("Description", "Bezeichnung3")
-            articleProperties_dict.Add("IsActive", "Geloescht")
+            Dim articleProperties_dict = New Dictionary(Of String, String) From {
+          {"ArticleNumber", "ArtikelNr"},
+           {"ArticleName", "Bezeichnung1"},
+           {"ArticleInfo", "Bezeichnung2"},
+           {"Description", "Bezeichnung3"},
+           {"IsActive", "Geloescht"}}
 
             Return articleProperties_dict
         End Get
