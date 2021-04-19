@@ -303,7 +303,7 @@ Public Class GeneralDataLoader
             Return True
 
         Catch ex As Exception
-            Logger.GetInstance.Log(LogLevel.Exception, ex.Message)
+            Logger.GetInstance.Log(LogLevel.Exception, "1111 " & ex.Message)
             Return False
         End Try
 

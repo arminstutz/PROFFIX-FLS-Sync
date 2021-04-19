@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -12,7 +12,7 @@
     <AssemblyName>FlsGliderSync</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MyType>WindowsForms</MyType>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <OptionExplicit>On</OptionExplicit>
     <OptionCompare>Binary</OptionCompare>
     <OptionStrict>On</OptionStrict>
@@ -50,7 +50,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DocumentationFile>FlsGliderSync.xml</DocumentationFile>
     <NoWarn>42353,42354,42355</NoWarn>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <WarningsAsErrors>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -86,28 +86,28 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Interop.ADODB">
-      <HintPath>D:\prg\PXV4\Prog\Interop.ADODB.dll</HintPath>
+      <HintPath>..\..\..\..\..\PROFFIX\PROFFIX_v4.0.15\Prog\Interop.ADODB.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
+      <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>D:\prg\PXV4\Prog\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\PROFFIX\PROFFIX_v4.0.20\Prog\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="pxBook, Version=4.0.0.1, Culture=neutral, PublicKeyToken=e3335efe194d08f8, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\prg\PXV4\Prog\pxBook.dll</HintPath>
+    <Reference Include="pxBook">
+      <HintPath>..\..\..\..\..\PROFFIX\PROFFIX_v4.0.20\Prog\pxBook.dll</HintPath>
     </Reference>
     <Reference Include="pxModul">
-      <HintPath>D:\prg\PXV4\Prog\pxModul.dll</HintPath>
+      <HintPath>..\..\..\..\..\PROFFIX\PROFFIX_v4.0.20\Prog\pxModul.dll</HintPath>
     </Reference>
     <Reference Include="pxTools">
-      <HintPath>D:\prg\PXV4\Prog\pxTools.dll</HintPath>
+      <HintPath>..\..\..\..\..\PROFFIX\PROFFIX_v4.0.20\Prog\pxTools.dll</HintPath>
     </Reference>
     <Reference Include="SMC.Lib">
-      <HintPath>D:\prg\PXV4\Prog\SMC.Lib.dll</HintPath>
+      <HintPath>\\support02\Trans\FLS_Backup_ORIG\FLS\SMC\SMC\bin\Debug\SMC.Lib.dll</HintPath>
     </Reference>
     <Reference Include="SMC.Proffix">
-      <HintPath>D:\prg\PXV4\Prog\SMC.Proffix.dll</HintPath>
+      <HintPath>\\support02\Trans\FLS_Backup_ORIG\FLS\SMC\SMC.Proffix\bin\Debug\SMC.Proffix.dll</HintPath>
     </Reference>
     <Reference Include="System">
       <Private>True</Private>
