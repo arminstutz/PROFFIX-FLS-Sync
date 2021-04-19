@@ -156,7 +156,7 @@ Public Class FrmMain
         ' wenn aus irgend einem Grund die Settings auf die Testumgebung umgestellt haben --> wieder auf scharfe Version umstellen (Anmeldedaten fallen aber raus)
         If My.Settings.ServiceAPITokenMethod.Contains("test.glider-fls.ch") Then
             fuerScharfeVersionAnpassen()
-            If logAusfuehrlich Then
+            If LogAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, "fuerScharfeVersionAnpassen() wurde ausgeführt")
             End If
         End If
@@ -165,12 +165,12 @@ Public Class FrmMain
         ' wenn der key "Testumgebung" in ini fehlt, --> scharfe Version
         If readFromIni("Testumgebung", False) = "1" Then
             fuerTestVersionAnpassen()
-            If logAusfuehrlich Then
+            If LogAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, "fuerTestversionAnpassen() wurde ausgeführt")
             End If
         End If
 
-        If logAusfuehrlich Then
+        If LogAusfuehrlich Then
             Logger.GetInstance.Log(LogLevel.Info, My.Settings.ServiceAPITokenMethod)
             Logger.GetInstance.Log(LogLevel.Info, My.Settings.ServiceAPIPersonMethod)
             Logger.GetInstance.Log(LogLevel.Info, My.Settings.ServiceAPIDeliveriesNotProcessedMethod)
@@ -958,7 +958,7 @@ Public Class FrmMain
     ''' </summary>
     ''' <param name="exce"></param>
     Private Sub logException(ByVal exce As Exception)
-        If logAusfuehrlich Then
+        If LogAusfuehrlich Then
 
             Log("---------------------------------------------------------------------------------------------------")
             Log("Folgender Fehler ist aufgetreten")

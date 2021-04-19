@@ -503,7 +503,7 @@ Public Class LinkAdressen
         Dim personResult As Threading.Tasks.Task(Of JArray)
         Try
 
-            If logAusfuehrlich Then
+            If LogAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, "in allen PX-Adressen wird die FLS-PersonId gelöscht")
             End If
             ' Für alle PX Adressen die PersonId löschen
@@ -522,7 +522,7 @@ Public Class LinkAdressen
             personResult = _serviceClient.CallAsyncAsJArray(My.Settings.ServiceAPIModifiedPersonFullDetailsMethod + DateTime.MinValue.ToString("yyyy-MM-dd"))
             personResult.Wait()
 
-            If logAusfuehrlich Then
+            If LogAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, "alle FLS Adressen geladen")
             End If
 

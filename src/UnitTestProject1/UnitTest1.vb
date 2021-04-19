@@ -1,6 +1,5 @@
-﻿Imports System.Text
-Imports Microsoft.VisualStudio.TestTools.UnitTesting
-Imports SMC
+﻿Imports SMC
+
 'Imports FlsGliderSync.Helper
 
 <TestClass()> Public Class UnitTest1
@@ -33,7 +32,7 @@ Imports SMC
     End Sub
 
     <TestMethod()>
-    Public Sub test2()
+    Public Sub Test2()
         ' Dim generalHelper As New Helper.GeneralHelper
 
         'Assert.Equals(Now, generalhelper.GetSinceDate(Now))

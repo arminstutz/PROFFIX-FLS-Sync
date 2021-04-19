@@ -245,9 +245,9 @@ Module FlsHelper
     ' fügt der MemberNr den Postfix hinzu (dass Adresse in PX nicht mehr existiert, da ganz gelöscht)
     Public Sub SetPostfixToMemberNr(ByRef person As JObject)
         ' wenn nicht bereits postfix angehängt
-        If Not GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber").Contains(postfix) Then
+        If Not GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber").Contains(Postfix) Then
             ' postfix anhängen
-            person("ClubRelatedPersonDetails")("MemberNumber") = GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber") + postfix
+            person("ClubRelatedPersonDetails")("MemberNumber") = GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber") + Postfix
         End If
     End Sub
 

@@ -81,7 +81,7 @@ Public Class GeneralDataLoader
                 End If
 
                 ' Infos zu Ländern aus FLS laden
-                locations = flsClient.CallAsyncAsJArray("http://test.glider-fls.ch/api/v1/locations/overview")
+                locations = flsClient.CallAsyncAsJArray("https://test.glider-fls.ch/api/v1/locations/overview")
                 locations.Wait()
 
                 ' Infos in ZUS_FLSLocations schreiben

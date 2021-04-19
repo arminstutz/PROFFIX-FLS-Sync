@@ -149,7 +149,7 @@ Public Class Importer
             Dim modifiedFlights As New List(Of JObject)
             Dim lastChangeDate As DateTime
 
-            If logAusfuehrlich Then
+            If LogAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, My.Settings.ServiceAPIModifiedFlightsMethod + lastFlightImport.ToString("yyyy-MM-dd"))
             End If
 
@@ -192,7 +192,7 @@ Public Class Importer
 
         Try
 
-            If logAusfuehrlich Then
+            If LogAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, flight.ToString)
             End If
 
@@ -248,7 +248,7 @@ Public Class Importer
             Logger.GetInstance.Log(LogLevel.Info, "Lieferscheinimport gestartet")
 
             ' alle Flüge, die zu verrechnen sind aus FLS herunterladen
-            If logAusfuehrlich Then
+            If LogAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, My.Settings.ServiceAPIDeliveriesNotProcessedMethod)
             End If
             deliveries = client.CallAsyncAsJArray(My.Settings.ServiceAPIDeliveriesNotProcessedMethod)
@@ -258,7 +258,7 @@ Public Class Importer
             ProgressDelivery = 0
             InvokeDoProgressDelivery()
 
-            If logAusfuehrlich Then
+            If LogAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, "Anzahl geladener Lieferscheine " & deliveries.Result.Children.Count)
                 Logger.GetInstance.Log(LogLevel.Info, deliveries.Result.ToString)
             End If
@@ -426,7 +426,7 @@ Public Class Importer
         Dim adressNr As String = String.Empty
         Dim recipientPersonId As String = String.Empty
 
-        If logAusfuehrlich Then
+        If LogAusfuehrlich Then
             Logger.GetInstance.Log(delivery.ToString)
         End If
 

@@ -240,7 +240,7 @@ Public Class Exporter
             ' JSON für neuen Artikel erstellen
             newFLSarticle = articleMapper.Mapp(proffixArticle, newFLSarticle)
 
-            If logAusfuehrlich Then
+            If LogAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, My.Settings.ServiceAPIArticlesMethod)
                 Logger.GetInstance.Log(LogLevel.Info, newFLSarticle.ToString)
             End If

@@ -168,7 +168,7 @@ Public Class PersonCreator
         Dim response_FLS As String = String.Empty
         Dim add As Object = CType(New pxKommunikation.pxAdressen, ValueType)
 
-        If logAusfuehrlich Then
+        If LogAusfuehrlich Then
             Logger.GetInstance.Log(MethodBase.GetCurrentMethod().Name + person.ToString)
         End If
 
@@ -252,7 +252,7 @@ Public Class PersonCreator
             Return False
         End If
 
-        If logAusfuehrlich Then
+        If LogAusfuehrlich Then
             Logger.GetInstance.Log(MethodBase.GetCurrentMethod().Name + pers.ToString)
         End If
 
@@ -264,7 +264,7 @@ Public Class PersonCreator
         ' Sicherstellen, dass keine MenberNumber mitgegeben wird (wenn in FLS gelöscht wurde + in PX noch verändert --> wird in FLS wieder erstellt, aber knallt, da MemberNumber schon mal vergeben war)
         pers("ClubRelatedPersonDetails")("MemberNumber") = Nothing
 
-        If logAusfuehrlich Then
+        If LogAusfuehrlich Then
             Logger.GetInstance.Log(LogLevel.Info, "JSON um Adresse in FLS zu erstellen: " + pers.ToString)
         End If
 

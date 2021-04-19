@@ -178,6 +178,9 @@ Public Class ProffixHelper
                 End If
             End If
 
+
+            Logger.GetInstance.Log(LogLevel.Info, "LaufNr:" & nextNr)
+
             Return nextNr
 
         Catch ex As Exception

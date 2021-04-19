@@ -29,7 +29,7 @@ Public Class PersonUpdater
         Dim adressChangeDate As DateTime
         Dim personChangeDate As DateTime = CDate(FlsHelper.GetPersonChangeDate(person))
 
-        If logAusfuehrlich Then
+        If LogAusfuehrlich Then
             Logger.GetInstance.Log(LogLevel.Info, "In beiden vorhanden PersonId: " + person("PersonId").ToString + " AdressNr: " + address.AdressNr.ToString)
         End If
 
@@ -81,7 +81,7 @@ Public Class PersonUpdater
         Dim fehler As String = String.Empty
         Dim successful As Boolean = True
 
-        If logAusfuehrlich Then
+        If LogAusfuehrlich Then
             Logger.GetInstance.Log(LogLevel.Info, "Adresse zum updaten: " + person.ToString)
         End If
 
@@ -147,7 +147,7 @@ Public Class PersonUpdater
                 Return False
             End If
 
-            If logAusfuehrlich Then
+            If LogAusfuehrlich Then
                 Logger.GetInstance.Log(MethodBase.GetCurrentMethod().Name + person.ToString)
             End If
 

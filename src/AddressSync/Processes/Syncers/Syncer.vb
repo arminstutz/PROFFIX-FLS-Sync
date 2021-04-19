@@ -137,7 +137,7 @@ Public Class Syncer
                 Return False
             End If
 
-            If logAusfuehrlich Then
+            If LogAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, "Anzahl FLS Adressen, die geladen wurden: " + FLSPersons.Count.ToString)
                 Logger.GetInstance.Log(LogLevel.Info, "Anzahl PX Adressen, die geladen wurden: " + PXadressen.Count.ToString)
             End If
@@ -155,7 +155,7 @@ Public Class Syncer
                     'End If
 
 
-                    If logAusfuehrlich Then
+                    If LogAusfuehrlich Then
                         Logger.GetInstance.Log(LogLevel.Info, "Geprüft wird FLS-Adresse Nachname: " + person("Lastname").ToString + " Vorname: " + person("Firstname").ToString)
                     End If
 
@@ -173,7 +173,7 @@ Public Class Syncer
                     ' die FLS-Adresse mit jeder Adresse aus Proffix vergleichen
                     For Each address As pxKommunikation.pxAdressen In PXadressen
 
-                        If logAusfuehrlich Then
+                        If LogAusfuehrlich Then
                             Logger.GetInstance.Log(LogLevel.Info, "Verglichen werden FLS-Adresse Nachname: " + person("Lastname").ToString + " Vorname: " + person("Firstname").ToString + " mit PX-Adresse " + address.AdressNr.ToString + " Nachname: " + address.Name)
                         End If
                         Try
@@ -235,7 +235,7 @@ Public Class Syncer
                     ' wenn PersonID leer oder PersonID (FLS)-Wert in Proffix unter ZF_FLSPersonId nicht gefunden wurde 
                     ' --> Adresse noch nicht in Proffix vorhanden
                     If existsInProffix = False Then
-                        If logAusfuehrlich Then
+                        If LogAusfuehrlich Then
                             Logger.GetInstance.Log(LogLevel.Info, "nur in FLS vorhanden: Nachname: " + person("Lastname").ToString + " Vorname: " + person("Firstname").ToString)
                         End If
 
@@ -271,7 +271,7 @@ Public Class Syncer
             ' --> es gibt noch Adressen, die nur in Proffix sind --> in FLS hinzufügen
             If (addressWorkProgress.Count < PXadressen.Count) Then
 
-                If logAusfuehrlich Then
+                If LogAusfuehrlich Then
                     Logger.GetInstance.Log(LogLevel.Info, "Verarbeitung von Adressen, die nur in PX vorhanden sind...")
                 End If
 
@@ -279,7 +279,7 @@ Public Class Syncer
                 For Each address As pxKommunikation.pxAdressen In PXadressen
                     Try
 
-                        If logAusfuehrlich Then
+                        If LogAusfuehrlich Then
                             Logger.GetInstance.Log(LogLevel.Info, "Nur in PX vorhanden: " + address.AdressNr.ToString + " Nachname: " + address.Name)
                         End If
 

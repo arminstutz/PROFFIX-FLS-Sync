@@ -19,10 +19,10 @@ Public Module FlsGliderSync
     Friend Property ProffixCrypto As ProffixCrypto = ProffixCrypto
 
     ' je nach Angabe in ini (1 = ausführlich, 0/"" = nicht ausführlich)
-    Friend Property logAusfuehrlich As Boolean = GeneralHelper.logAusfuehrlichSchreiben()
+    Friend Property LogAusfuehrlich As Boolean = GeneralHelper.logAusfuehrlichSchreiben()
 
     ' dieser Postfix wird in FLS an MemberNr angehängt, wenn Adresse nur noch in FLS und in PX ganz gelöscht wurde
-    Friend Property postfix As String = "_delInPX"
+    Friend Property Postfix As String = "_delInPX"
 
-   
+
 End Module
