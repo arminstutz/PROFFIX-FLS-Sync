@@ -233,16 +233,28 @@ Namespace My
                 Me("ServiceAPIModifiedFlightsMethod") = value
             End Set
         End Property
-        
-        <Global.System.Configuration.UserScopedSettingAttribute(),  _
-         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("https://test.glider-fls.ch/api/v1/aircrafts/overview")>  _
+
+        <Global.System.Configuration.UserScopedSettingAttribute(),
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),
+         Global.System.Configuration.DefaultSettingValueAttribute("https://test.glider-fls.ch/api/v1/aircrafts/overview")>
         Public Property ServiceAPIAircraftsMethod() As String
             Get
-                Return CType(Me("ServiceAPIAircraftsMethod"),String)
+                Return CType(Me("ServiceAPIAircraftsMethod"), String)
             End Get
             Set
                 Me("ServiceAPIAircraftsMethod") = value
+            End Set
+        End Property
+
+        <Global.System.Configuration.UserScopedSettingAttribute(),
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),
+         Global.System.Configuration.DefaultSettingValueAttribute("https://test.glider-fls.ch/api/v1/locations/overview")>
+        Public Property ServiceAPILocationsMethod() As String
+            Get
+                Return CType(Me("ServiceAPILocationsMethod"), String)
+            End Get
+            Set
+                Me("ServiceAPILocationsMethod") = Value
             End Set
         End Property
     End Class
