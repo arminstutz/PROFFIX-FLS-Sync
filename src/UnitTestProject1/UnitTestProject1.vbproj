@@ -50,16 +50,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="pxBook">
-      <HintPath>D:\prg\PXV4\Prog\pxBook.dll</HintPath>
+      <HintPath>..\DLLs\pxBook.dll</HintPath>
     </Reference>
     <Reference Include="pxModul">
-      <HintPath>D:\prg\PXV4\Prog\pxModul.dll</HintPath>
+      <HintPath>..\DLLs\pxModul.dll</HintPath>
     </Reference>
     <Reference Include="SMC.Lib">
-      <HintPath>D:\prg\PXV4\Prog\SMC.Lib.dll</HintPath>
+      <HintPath>..\DLLs\SMC.Lib.dll</HintPath>
     </Reference>
     <Reference Include="SMC.Proffix">
-      <HintPath>D:\prg\PXV4\Prog\SMC.Proffix.dll</HintPath>
+      <HintPath>..\DLLs\SMC.Proffix.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />

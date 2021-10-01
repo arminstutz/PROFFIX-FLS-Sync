@@ -85,33 +85,39 @@
     <GenerateManifests>false</GenerateManifests>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
     <Reference Include="Interop.ADODB">
-      <HintPath>D:\prg\PXV4\Prog\Interop.ADODB.dll</HintPath>
+      <HintPath>..\DLLs\Interop.ADODB.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>D:\prg\PXV4\Prog\Newtonsoft.Json.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="pxBook, Version=4.0.0.1, Culture=neutral, PublicKeyToken=e3335efe194d08f8, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\prg\PXV4\Prog\pxBook.dll</HintPath>
+      <HintPath>..\DLLs\pxBook.dll</HintPath>
     </Reference>
     <Reference Include="pxModul">
-      <HintPath>D:\prg\PXV4\Prog\pxModul.dll</HintPath>
+      <HintPath>..\DLLs\pxModul.dll</HintPath>
     </Reference>
     <Reference Include="pxTools">
-      <HintPath>D:\prg\PXV4\Prog\pxTools.dll</HintPath>
+      <HintPath>..\DLLs\pxTools.dll</HintPath>
     </Reference>
     <Reference Include="SMC.Lib">
-      <HintPath>D:\prg\PXV4\Prog\SMC.Lib.dll</HintPath>
+      <HintPath>..\DLLs\SMC.Lib.dll</HintPath>
     </Reference>
     <Reference Include="SMC.Proffix">
-      <HintPath>D:\prg\PXV4\Prog\SMC.Proffix.dll</HintPath>
+      <HintPath>..\DLLs\SMC.Proffix.dll</HintPath>
     </Reference>
     <Reference Include="System">
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Net.Http" />
@@ -140,7 +146,6 @@
     <Import Include="System.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BeispielDeliveries.vb" />
     <Compile Include="Forms\FrmFlightImport.Designer.vb">
       <DependentUpon>FrmFlightImport.vb</DependentUpon>
     </Compile>
@@ -237,7 +242,6 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
-    <Content Include="BeispielDeliveries.txt" />
     <None Include="ClassDiagram1.cd" />
     <None Include="My Project\app.manifest" />
     <None Include="My Project\Application.myapp">
