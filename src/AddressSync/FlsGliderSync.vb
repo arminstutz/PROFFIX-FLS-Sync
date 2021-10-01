@@ -10,8 +10,7 @@ Public Module FlsGliderSync
     ''' <summary>
     ''' Die Verbindung zu PROFFIX
     ''' </summary>
-    Friend Property Proffix As Proffix = New Proffix("25sdf-ds829-artea-32666", "FlsGliderSync", Application.StartupPath + "\")
-    'Für Proffix V4.1007: Public Property Proffix As Proffix = New Proffix("23sdf-ds829-affea-32444", "FlsGliderSync", Application.StartupPath + "\")
+    Friend Property Proffix As Proffix = New Proffix(ProffixCrypto.Decrypt(readFromIni("licenseKey"), My.Settings.Crypto), "FlsGliderSync", Application.StartupPath + "\")
 
     ''' <summary>
     ''' Die Helper klasse für die Verschlüsselung
@@ -19,10 +18,19 @@ Public Module FlsGliderSync
     Friend Property ProffixCrypto As ProffixCrypto = ProffixCrypto
 
     ' je nach Angabe in ini (1 = ausführlich, 0/"" = nicht ausführlich)
-    Friend Property LogAusfuehrlich As Boolean = GeneralHelper.logAusfuehrlichSchreiben()
+    Friend Property logAusfuehrlich As Boolean = GeneralHelper.logAusfuehrlichSchreiben()
 
     ' dieser Postfix wird in FLS an MemberNr angehängt, wenn Adresse nur noch in FLS und in PX ganz gelöscht wurde
-    Friend Property Postfix As String = "_delInPX"
+    Friend Property postfix As String = "_delInPX"
 
+    ' definiert, welche DB bei der 1. Synchronisation als Master gelten soll.
+    ' wenn im FlsGliderSync.ini master=fls oder master=proffix steht, ist die entsprechende DB master. ansonsten wird je nach Änderungsdatum geupdatet
+    Friend Property Master As UseAsMaster
 
 End Module
+
+Public Enum UseAsMaster
+    fls
+    proffix
+    undefined
+End Enum

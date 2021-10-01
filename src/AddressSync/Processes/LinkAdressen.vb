@@ -6,6 +6,7 @@ Imports System.Net
 Imports System.Net.Http
 Imports System.Net.Http.Headers
 Imports System.Net.Http.HttpResponseMessage
+Imports System.Linq
 
 Imports pxModul
 Imports pxBook
@@ -97,8 +98,9 @@ Public Class LinkAdressen
 
             _addressWorkProgress = New Dictionary(Of Integer, Boolean)
 
-            ' Alle ungelöschten FLS Adressen holen
-            Dim personResult As Threading.Tasks.Task(Of JArray) = _serviceClient.CallAsyncAsJArray(My.Settings.ServiceAPIModifiedPersonFullDetailsMethod + DateTime.MinValue.ToString("yyyy-MM-dd"))
+            ' Alle ungelöschten FLS Adressen holen, die seit lastSync verändert wurden
+            ' Dim personResult As Threading.Tasks.Task(Of JArray) = _serviceClient.CallAsyncAsJArray(My.Settings.ServiceAPIModifiedPersonFullDetailsMethod + DateTime.MinValue.ToString("yyyy-MM-dd"))
+            Dim personResult As Threading.Tasks.Task(Of JArray) = _serviceClient.CallAsyncAsJArray(My.Settings.ServiceAPIModifiedPersonFullDetailsMethod + lastSync.ToString("yyyy-MM-dd"))
             personResult.Wait()
 
             ' um Zeit zu sparen werden nicht pber pxBook sondern über adodb gekürzte (nur Name, Adresse, PersonId, AdressNr in pxAdressen ausgefüllt) geladen 
@@ -113,95 +115,138 @@ Public Class LinkAdressen
             For Each person As JObject In personResult.Result.Children()
 
                 ' es interessieren nur Adressen, die nach lastSync erstellt wurden
-                If CDate(FlsHelper.GetPersonChangeDate(person)) > lastSync Then
+                ' If CDate(FlsHelper.GetPersonChangeDate(person)) > lastSync Then
 
-                    ' die FLS-Adresse mit jeder Adresse aus Proffix vergleichen
-                    For Each address As pxKommunikation.pxAdressen In adressList
-                        IsSamePerson = False
-                        Dim addressChangeDate As DateTime = ProffixHelper.GetAddressChangeDate(address)
-                        ' es interessieren nur Adressen, die nach lastSync bearbeitet/erstellt wurden
-                        If CDate(addressChangeDate) > lastSync Then
+                Dim personname As String = GetValOrDef(person, "Lastname").Trim
+                Dim personvorname As String = GetValOrDef(person, "Firstname").Trim
 
-                            Dim personname As String = GetValOrDef(person, "Lastname")
-                            Dim personvorname As String = GetValOrDef(person, "Firstname")
-                            Dim addressname As String = address.Name
-                            Dim addressvorname As String = address.Vorname
 
-                            ' wenn es laut Name/Vorname die gleichen Adressen sind
-                            If personname.Trim() = addressname.Trim() And personvorname.Trim() = addressvorname.Trim() Then
-
-                                Dim personIdAusFLS As String = person("PersonId").ToString
-                                Dim adressNrAusFLS As String = GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber")
-                                Dim personIdAusPX As String = pxhelper.GetPersonId(address.AdressNr.ToString)
-                                Dim adressNrAusPX As String = address.AdressNr.ToString
-
-                                ' wenn bereits richtig verknüpft --> nichts machen + unnötig zu prüfen, ob es gleiche Person ist
-                                If (adressNrAusFLS = adressNrAusPX) And personIdAusFLS = personIdAusPX Then
-                                    Exit For
-                                End If
-
-                                ' die Adressen sind noch nicht verknüpft
-
-                                ' es interessieren nur Adressen, die noch nie verknüpft wurden
-                                If adressNrAusFLS = String.Empty And personIdAusPX = String.Empty Then
-
-                                    ' prüfen ob gleiche Person (Strasse + Ort)
-                                    If (GetValOrDef(person, "AddressLine1").Trim() = address.Strasse.Trim() _
-                                        Or GetValOrDef(person, "AddressLine1").Trim() = address.Strasse.Trim().Replace("str.", "strasse")) _
-                                        And GetValOrDef(person, "City").Trim() = address.Ort.Trim() Then
-
-                                        ' es ist die gleiche Person
-                                        IsSamePerson = True
-                                    Else
-                                        ' Vor- + Nachname + PLZ stimmen überein. Wenn auch noch PLZ übereinstimmt --> User fragen ob gleiche Person
-                                        If GetValOrDef(person, "ZipCode") = address.Plz Then
-
-                                            Dim dialogres As DialogResult = MessageBox.Show("Handelt es sich bei folgenden Adressen um dieselbe Person?" + vbCrLf +
-                                                             vbCrLf +
-                                                                "Adresse aus FLS:" + vbCrLf +
-                                                                "PersonId: " + personIdAusFLS + vbCrLf +
-                                                                "AdressNr: " + adressNrAusFLS + vbCrLf +
-                                                                "Name: " + personname + vbCrLf +
-                                                                "Vorname: " + personvorname + vbCrLf +
-                                                                "Strasse: " + GetValOrDef(person, "AddressLine1") + vbCrLf +
-                                                                "PLZ: " + GetValOrDef(person, "ZipCode") + vbCrLf +
-                                                                "Ort: " + GetValOrDef(person, "City") + vbCrLf +
-                                                                vbCrLf +
-                                                                "Adresse aus Proffix:" + vbCrLf +
-                                                                "AdressNr: " + adressNrAusPX + vbCrLf +
-                                                                "PersonId: " + personIdAusPX + vbCrLf +
-                                                                "Name: " + addressname + vbCrLf +
-                                                                "Vorname: " + addressvorname + vbCrLf +
-                                                                "Strasse: " + address.Strasse + vbCrLf +
-                                                                "PLZ: " + address.Plz + vbCrLf +
-                                                                "Ort: " + address.Ort + vbCrLf + vbCrLf + vbCrLf +
-                                                                "Klicken Sie ja, wenn es sich um dieselbe Person handelt, und die Adressen verknüpft werden sollen. " + vbCrLf +
-                                                                "Klicken Sie nein, wenn es sich nicht um dieselbe Person handelt. Sie werden dann jeweils im anderen System neu erstellt. " + vbCrLf +
-                                                                "Klicken Sie Abbrechen, um den Vorgang abzubrechen", "Dieselbe Person?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2)
-
-                                            ' wenn User angibt, dass selbe Person --> verknüpfen
-                                            If dialogres = DialogResult.Yes Then
-                                                IsSamePerson = True
-                                                ' wenn User angibt, dass nicht selbe Person (dialogresult.no) --> nichts machen --> Personen werden bei AdressSynchronisation im anderen System erstellt
-                                            ElseIf dialogres = DialogResult.No Then
-                                                ' wenn User abbricht oder Fenster schliesst --> Verknüpfung abbrechen
-                                            Else
-                                                Return False
-                                            End If
-                                        End If
-                                    End If
-
-                                    ' wenn es sich um gleiche Person handelt (laut Programm, oder laut User)
-                                    If IsSamePerson Then
-                                        If Not verknuepfen(person, address) Then
-                                            geklappt = False
-                                        End If
-                                    End If
-                                End If
-                            End If
-                            End If
-                    Next
+                ' Linq testen. Vorselektion. Gehe in for each nur die Adressen durch, bei denen der Name und Vorname stimmt
+                Dim gleichnamigeAdressen As IEnumerable(Of pxKommunikation.pxAdressen) = From address As pxKommunikation.pxAdressen In adressList Where address.Name.Trim = personname.Trim And address.Vorname.Trim = personvorname.Trim
+                If gleichnamigeAdressen.Count = 0 Then
+                    If logAusfuehrlich Then
+                        Logger.GetInstance.Log(LogLevel.Info, "Keine Adressen mit Name " + personname + " Vorname " + personvorname + " in PX vorhanden")
+                    End If
+                    Continue For
                 End If
+                If logAusfuehrlich Then
+                    Logger.GetInstance.Log(LogLevel.Info, "Es wird mit " + gleichnamigeAdressen.Count.ToString + " Adressen aus PX mit dem Namen " + personname + " Vornamen " + personvorname + " verglichen")
+                End If
+
+                ' die FLS-Adresse mit jeder Adresse aus Proffix vergleichen, (mit linq: nur noch die durchgehen, welche gleichen Name/Vorname haben)
+                For Each address As pxKommunikation.pxAdressen In gleichnamigeAdressen
+                    IsSamePerson = False
+                    Dim addressChangeDate As DateTime = ProffixHelper.GetAddressChangeDate(address)
+                    ' es interessieren nur Adressen, die nach lastSync bearbeitet/erstellt wurden
+                    If CDate(addressChangeDate) > lastSync Then
+
+                        ' Dim addressname As String = address.Name
+                        ' Dim addressvorname As String = address.Vorname
+
+                        ' wenn es laut Name/Vorname die gleichen Adressen sind
+                        ' If personname.Trim() = addressname.Trim() And personvorname.Trim() = addressvorname.Trim() Then
+
+                        Dim personIdAusFLS As String = person("PersonId").ToString.ToLower.Trim
+                        Dim adressNrAusFLS As String = GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber").ToLower.Trim
+                        Dim personIdAusPX As String = pxhelper.GetPersonId(address.AdressNr.ToString).ToLower.Trim
+                        Dim adressNrAusPX As String = address.AdressNr.ToString.ToLower.Trim
+
+                        ' wenn FLS bereits eine AdressNr eingetragen hat --> prüfen, ob die Adressen bereits richtig verknüpft sind
+                        If (adressNrAusFLS = adressNrAusPX) Then
+                            If (personIdAusFLS = personIdAusPX) Then
+                                ' wenn bereits richtig verknüpft --> nichts machen + unnötig zu prüfen, ob es gleiche Person ist
+                                Exit For
+
+                                ' FLS hat zwar bereits die PX-Adressnr, aber PX noch nicht die PersonId
+                            ElseIf (personIdAusPX = String.Empty) Then
+
+                                ' adressNrAusFLS (MemberNumber) ist gleich wie AddressNrAusPX und Vorname und Nachname stimmt auch überein, PersonId ist aber noch leer in PX
+                                ' --> schreibt PersonId in PX (+ schreibt bereits vorhandene AdressNr nochmals in FLS. Dies ist nötig, damit FLS als zu letzt geändert gilt, da zu Beginn nur FLS die Zusatzfeldinfos enthält)
+                                If Not verknuepfen(person, adressNrAusPX) Then
+                                    geklappt = False
+                                Else
+                                    'Meldung dass erfolgreich
+                                    InvokeLog("Name: " + address.Name + " Vorname: " + address.Vorname + " AdressNr: " + address.AdressNr.ToString + " PersonId: " + person("PersonId").ToString.ToLower.Trim() + " wurde verknüpft")
+                                    Logger.GetInstance.Log(LogLevel.Info, "Name: " + address.Name + " Vorname: " + address.Vorname + " AdressNr: " + address.AdressNr.ToString + " PersonId: " + person("PersonId").ToString.ToLower.Trim + "wurde verknüpft")
+                                End If
+
+                                Exit For
+
+                                ' in PX hat PersonId einen Wert, aber nicht denselben wie aus FLS --> hat Wert drin, aber nicht denselben wie von FLS geliefert wird --> Fehler
+                            Else
+                                InvokeLog(vbTab + "Die PX-Adresse mit der AdressNr " + adressNrAusPX + " enthält die PersonId " + personIdAusPX + ". In FLS ist diese AdressNr aber für Person mit Id " + personIdAusFLS + " eingetragen. Löschen Sie in PX die PersonId, damit die AdressNr " + adressNrAusPX + " mit PersonId " + personIdAusFLS + " verknüpft werden kann.")
+                                Logger.GetInstance.Log(LogLevel.Exception, "Die PX-Adresse mit der AdressNr " + adressNrAusPX + " enthält die PersonId " + personIdAusPX + ". In FLS ist diese AdressNr aber für Person mit Id " + personIdAusFLS + " eingetragen. Löschen Sie in PX die PersonId, damit die AdressNr " + adressNrAusPX + " mit PersonId " + personIdAusFLS + " verknüpft werden kann.")
+                                geklappt = False
+                                Exit For
+                            End If
+                        End If
+
+                        ' die Adressen sind noch nicht verknüpft
+
+                        ' es interessieren nur Adressen, die noch nie verknüpft wurden
+                        If adressNrAusFLS = String.Empty And personIdAusPX = String.Empty Then
+
+                            ' prüfen ob gleiche Person (Strasse + Ort)
+                            If (GetValOrDef(person, "AddressLine1").Trim() = address.Strasse.Trim() _
+                                Or GetValOrDef(person, "AddressLine1").Trim() = address.Strasse.Trim().Replace("str.", "strasse")) _
+                                And GetValOrDef(person, "City").Trim() = address.Ort.Trim() Then
+
+                                ' es ist die gleiche Person
+                                IsSamePerson = True
+                            Else
+                                ' Vor- + Nachname + PLZ stimmen überein. Wenn auch noch PLZ übereinstimmt --> User fragen ob gleiche Person
+                                If GetValOrDef(person, "ZipCode") = address.Plz Then
+
+                                    Dim dialogres As DialogResult = MessageBox.Show("Handelt es sich bei folgenden Adressen um dieselbe Person?" + vbCrLf +
+                                                     vbCrLf +
+                                                        "Adresse aus FLS:" + vbCrLf +
+                                                        "PersonId: " + personIdAusFLS + vbCrLf +
+                                                        "AdressNr: " + adressNrAusFLS + vbCrLf +
+                                                        "Name: " + personname + vbCrLf +
+                                                        "Vorname: " + personvorname + vbCrLf +
+                                                        "Strasse: " + GetValOrDef(person, "AddressLine1") + vbCrLf +
+                                                        "PLZ: " + GetValOrDef(person, "ZipCode") + vbCrLf +
+                                                        "Ort: " + GetValOrDef(person, "City") + vbCrLf +
+                                                        vbCrLf +
+                                                        "Adresse aus Proffix:" + vbCrLf +
+                                                        "AdressNr: " + adressNrAusPX + vbCrLf +
+                                                        "PersonId: " + personIdAusPX + vbCrLf +
+                                                        "Name: " + address.Name + vbCrLf +
+                                                        "Vorname: " + address.Vorname + vbCrLf +
+                                                        "Strasse: " + address.Strasse + vbCrLf +
+                                                        "PLZ: " + address.Plz + vbCrLf +
+                                                        "Ort: " + address.Ort + vbCrLf + vbCrLf + vbCrLf +
+                                                        "Klicken Sie ja, wenn es sich um dieselbe Person handelt, und die Adressen verknüpft werden sollen. " + vbCrLf +
+                                                        "Klicken Sie nein, wenn es sich nicht um dieselbe Person handelt. Sie werden dann jeweils im anderen System neu erstellt. " + vbCrLf +
+                                                        "Klicken Sie Abbrechen, um den Vorgang abzubrechen", "Dieselbe Person?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2)
+
+                                    ' wenn User angibt, dass selbe Person --> verknüpfen
+                                    If dialogres = DialogResult.Yes Then
+                                        IsSamePerson = True
+                                        ' wenn User angibt, dass nicht selbe Person (dialogresult.no) --> nichts machen --> Personen werden bei AdressSynchronisation im anderen System erstellt
+                                    ElseIf dialogres = DialogResult.No Then
+                                        ' wenn User abbricht oder Fenster schliesst --> Verknüpfung abbrechen
+                                    Else
+                                        Return False
+                                    End If
+                                End If
+                            End If
+
+                            ' wenn es sich um gleiche Person handelt (laut Programm, oder laut User)
+                            If IsSamePerson Then
+                                If Not verknuepfen(person, adressNrAusPX) Then
+                                    geklappt = False
+                                Else
+                                    'Meldung dass erfolgreich
+                                    InvokeLog("Name: " + address.Name + " Vorname: " + address.Vorname + " AdressNr: " + address.AdressNr.ToString + " PersonId: " + person("PersonId").ToString.ToLower.Trim() + " wurde verknüpft")
+                                    Logger.GetInstance.Log(LogLevel.Info, "Name: " + address.Name + " Vorname: " + address.Vorname + " AdressNr: " + address.AdressNr.ToString + " PersonId: " + person("PersonId").ToString.ToLower.Trim + "wurde verknüpft")
+                                End If
+                            End If
+                        End If
+                        '  End If
+                    End If
+                Next
+                ' End If
             Next
 
             ' Adressen, die nur in einem System vorhanden sind, werden hier ignoriert --> werden bei Adresssynchronisation im anderen System erstellt
@@ -231,46 +276,43 @@ Public Class LinkAdressen
     End Function
 
     ' verküpft 2 Adressen
-    Private Function verknuepfen(ByVal person As JObject, ByVal address As pxKommunikation.pxAdressen) As Boolean
+    Private Function verknuepfen(ByVal person As JObject, ByVal adressNr As String) As Boolean
         Dim fehler As String = String.Empty
 
         Try
 
-            Dim vollstaendigeAdresse As pxKommunikation.pxAdressen() = New pxKommunikation.pxAdressen() {}
+            'Dim vollstaendigeAdresse As pxKommunikation.pxAdressen() = New pxKommunikation.pxAdressen() {}
 
-            ' ganze Adresse aus PX holen
-            If Not Proffix.GoBook.GetAdresse(pxKommunikation.pxAdressSuchTyp.AdressNr, address.AdressNr.ToString, vollstaendigeAdresse, fehler) Then
-                ' die Adresse ist nicht unter den ungelöschten
-                If Not Proffix.GoBook.GetAdresse(pxKommunikation.pxAdressSuchTyp.AdressNr, address.AdressNr.ToString, vollstaendigeAdresse, fehler, pxKommunikation.pxGeloeschte.Geloeschte) Then
-                    ' die Adresse ist nicht unter den ungelöschten oder gelöschten --> gar nicht vorhanden
-                    Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Laden der Adresse für AdressNr " + address.AdressNr.ToString + " " + fehler)
-                    Return False
-                End If
-            End If
+            '' ganze Adresse aus PX holen
+            'If Not Proffix.GoBook.GetAdresse(pxKommunikation.pxAdressSuchTyp.AdressNr, address.AdressNr.ToString, vollstaendigeAdresse, fehler) Then
+            '    ' die Adresse ist nicht unter den ungelöschten
+            '    If Not Proffix.GoBook.GetAdresse(pxKommunikation.pxAdressSuchTyp.AdressNr, address.AdressNr.ToString, vollstaendigeAdresse, fehler, pxKommunikation.pxGeloeschte.Geloeschte) Then
+            '        ' die Adresse ist nicht unter den ungelöschten oder gelöschten --> gar nicht vorhanden
+            '        Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Laden der Adresse für AdressNr " + address.AdressNr.ToString + " " + fehler)
+            '        Return False
+            '    End If
+            'End If
 
-            ' wenn mehr als eine Adresse (+ die leere an Position 0) geladen wurde --> mehrere Adressen haben dieselbe PersonId --> Fehler
-            If vollstaendigeAdresse.Count > 2 Then
-                Logger.GetInstance.Log(LogLevel.Exception, "Es wurde mehr als 1 Adresse geladen für die AdressNr: " + address.AdressNr.ToString)
-            End If
+            '' wenn mehr als eine Adresse (+ die leere an Position 0) geladen wurde --> mehrere Adressen haben dieselbe PersonId --> Fehler
+            'If vollstaendigeAdresse.Count > 2 Then
+            '    Logger.GetInstance.Log(LogLevel.Exception, "Es wurde mehr als 1 Adresse geladen für die AdressNr: " + address.AdressNr.ToString)
+            'End If
 
             ' PersonId aus FLS in PX schreiben
-            If Not pxAktualisieren(person, vollstaendigeAdresse(1)) Then
+            If Not pxAktualisieren(person("PersonId").ToString.ToLower.Trim, adressNr) Then
                 Throw New Exception("Fehler in pxAktualisieren")
             End If
 
             ' AdressNr aus PX in FLS schreiben
-            If Not flsAktualisieren(person, vollstaendigeAdresse(1)) Then
+            If Not flsAktualisieren(person, adressNr) Then
                 Throw New Exception("Fehler in flsAktualisieren")
             End If
 
-            'Meldung dass erfolgreich
-            InvokeLog("Name: " + address.Name + " Vorname: " + address.Vorname + " AdressNr: " + address.AdressNr.ToString + " PersonId: " + person("PersonId").ToString + " wurde verknüpft")
-            Logger.GetInstance.Log(LogLevel.Info, "Name: " + address.Name + " Vorname: " + address.Vorname + " AdressNr: " + address.AdressNr.ToString + " PersonId: " + person("PersonId").ToString + "wurde verknüpft")
             Return True
 
         Catch ex As Exception
             Logger.GetInstance.Log(LogLevel.Exception, "Fehler in " + MethodBase.GetCurrentMethod.Name + " " + ex.Message)
-            InvokeLog(vbTab + "Fehler beim Verknüpfen der Adressen. PersonId:" + person("PersonId").ToString + " AdressNr: " + address.AdressNr.ToString + " Name: " + address.Name + " Vorname: " + address.Vorname)
+            InvokeLog(vbTab + "Fehler beim Verknüpfen der Adressen. PersonId:" + person("PersonId").ToString.ToLower.Trim + " AdressNr: " + adressNr)
 
             Return False
         End Try
@@ -286,7 +328,7 @@ Public Class LinkAdressen
         'Dim syncOk As Integer   ' ist die Adresse in PX als zu synchronisieren markiert (Zuatzfeld Z_Synchronisieren = 1)
 
         Try
-            sql = "select * from adr_adressen where Z_synchronisieren = 1"
+            sql = "select * from adr_adressen where Z_synchronisieren = 1 order by name"
             If Not myconn.getRecord(rs, sql, fehler) Then
                 Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Laden der Adressen aus Proffix")
                 Return Nothing
@@ -377,19 +419,19 @@ Public Class LinkAdressen
 
 
     ' AdressNr in FLS schreiben
-    Private Function flsAktualisieren(ByVal person As JObject, ByVal address As pxBook.pxKommunikation.pxAdressen) As Boolean
+    Private Function flsAktualisieren(ByVal person As JObject, ByVal adressnr As String) As Boolean
         Dim response_FLS As String = String.Empty
 
         ' AdressNr in JSON schreiben
-        person("ClubRelatedPersonDetails")("MemberNumber") = address.AdressNr.ToString
+        person("ClubRelatedPersonDetails")("MemberNumber") = adressnr
         person = CType(FlsHelper.removeMetadata(person), JObject)
 
         ' in FLS updaten
-        response_FLS = _serviceClient.SubmitChanges(person("PersonId").ToString(), person, SyncerCommitCommand.Update)
+        response_FLS = _serviceClient.SubmitChanges(person("PersonId").ToString.ToLower.Trim, person, SyncerCommitCommand.Update)
 
         If response_FLS <> "OK" Then
-            InvokeLog(vbTab + "Fehler: Die AdressNr(VereinsmitgliedNr)" & address.AdressNr & " konnte in FLS nicht aktualisiert werden." + response_FLS)
-            Logger.GetInstance.Log(LogLevel.Critical, "Die AdressNr(VereinsmitgliedNr) konnte in FLS nicht aktualisiert werden. AdressNr:" + CStr(address.AdressNr) + " " + response_FLS)
+            InvokeLog(vbTab + "Fehler: Die AdressNr(VereinsmitgliedNr)" & adressnr & " konnte in FLS nicht aktualisiert werden." + response_FLS)
+            Logger.GetInstance.Log(LogLevel.Critical, "Die AdressNr(VereinsmitgliedNr) konnte in FLS nicht aktualisiert werden. AdressNr:" + CStr(adressnr) + " " + response_FLS)
             Return False
         End If
         Return True
@@ -397,18 +439,28 @@ Public Class LinkAdressen
 
 
     ' PersonId in PX schreiben
-    Private Function pxAktualisieren(ByVal person As JObject, ByVal address As pxBook.pxKommunikation.pxAdressen) As Boolean
+    Private Function pxAktualisieren(ByVal personid As String, ByVal adressnr As String) As Boolean
         Dim fehler As String = String.Empty
-        ' PersonId in pxAdresse schreiben
-        address = ProffixHelper.SetZusatzFelder(address, "Z_FLSPersonId", "Z_FLSPersonId", "", "", person("PersonId").ToString)
+        Dim rs As New ADODB.Recordset
 
-        ' in Proffix updaten
-        Proffix.GoBook.AddAdresse(address, fehler, False, ProffixHelper.CreateZusatzFelderSql(address))
-        If Not String.IsNullOrEmpty(fehler) Then
-            InvokeLog(vbTab + "Fehler: FLSPersonId konnte in Proffix nicht aktualisiert werden." + fehler)
-            Logger.GetInstance.Log(LogLevel.Critical, "FLSPersonId konnte in Proffix nicht geupdatet werden. AdressNr: " + CStr(address.AdressNr) + " " + fehler)
+        ' nur PersonId über SQL updaten, damit Adresse in PX danach nicht als neuer gilt
+        Dim Sql = "update ADR_Adressen set Z_FLSPersonId = '" + personid + "' where adressnradr = " + adressnr
+        If Not myconn.getRecord(rs, Sql, fehler) Then
+            InvokeLog(vbTab + "Fehler beim updaten der PersonId " + personid + " in Proffix für AdressNr " + adressnr)
+            Logger.GetInstance.Log(LogLevel.Exception, "error in updating the PersonId " + personid + " in PX for AdressNr " + adressnr)
             Return False
         End If
+
+        '' PersonId in pxAdresse schreiben
+        'address = ProffixHelper.SetZusatzFelder(address, "Z_FLSPersonId", "Z_FLSPersonId", "", "", person("PersonId").ToString.ToLower.Trim)
+
+        '' in Proffix updaten
+        'Proffix.GoBook.AddAdresse(address, fehler, False, ProffixHelper.CreateZusatzFelderSql(address))
+        'If Not String.IsNullOrEmpty(fehler) Then
+        '    InvokeLog(vbTab + "Fehler: FLSPersonId konnte in Proffix nicht aktualisiert werden." + fehler)
+        '    Logger.GetInstance.Log(LogLevel.Critical, "FLSPersonId konnte in Proffix nicht geupdatet werden. AdressNr: " + CStr(address.AdressNr) + " " + fehler)
+        '    Return False
+        'End If
         Return True
     End Function
 
@@ -503,7 +555,7 @@ Public Class LinkAdressen
         Dim personResult As Threading.Tasks.Task(Of JArray)
         Try
 
-            If LogAusfuehrlich Then
+            If logAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, "in allen PX-Adressen wird die FLS-PersonId gelöscht")
             End If
             ' Für alle PX Adressen die PersonId löschen
@@ -522,7 +574,7 @@ Public Class LinkAdressen
             personResult = _serviceClient.CallAsyncAsJArray(My.Settings.ServiceAPIModifiedPersonFullDetailsMethod + DateTime.MinValue.ToString("yyyy-MM-dd"))
             personResult.Wait()
 
-            If LogAusfuehrlich Then
+            If logAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, "alle FLS Adressen geladen")
             End If
 
@@ -532,7 +584,7 @@ Public Class LinkAdressen
                 ' MemberNumber löschen
                 If GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber") <> "" Then
                     person("ClubRelatedPersonDetails")("MemberNumber") = Nothing
-                    If Not _serviceClient.SubmitChanges(person("PersonId").ToString(), person, SyncerCommitCommand.Update) = "OK" Then
+                    If Not _serviceClient.SubmitChanges(person("PersonId").ToString.ToLower.Trim, person, SyncerCommitCommand.Update) = "OK" Then
                         InvokeLog("Fehler beim Löschen der MemberNumber in FLS")
                         Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Löschen der MemberNumber in FLS" + person.ToString)
                         Return False

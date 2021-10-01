@@ -43,7 +43,7 @@ Public Class ProffixHelper
             If rs.EOF Then
                 ' es konnte kein LastSync geladen werden, da für den angegebenen synctype noch kein Datensatz in ZUS_FLSSync erstellt wurde
                 '--> Defaultdate
-                Return DateTime.Parse("2017-02-02 08:00:00.000")
+                Return DateTime.Parse("2013-02-02 08:00:00.000")
                 'Return DateTime.MinValue
             End If
         End If
@@ -178,9 +178,6 @@ Public Class ProffixHelper
                 End If
             End If
 
-
-            '  Logger.GetInstance.Log(LogLevel.Info, "LaufNr:" & nextNr)
-
             Return nextNr
 
         Catch ex As Exception
@@ -200,31 +197,75 @@ Public Class ProffixHelper
 
         Dim rs_lastSync As New ADODB.Recordset
         Dim sql As String = ""
+
+        Dim rs_id As New ADODB.Recordset
+        Dim sql_id As String
+        Dim id As Integer
+
+        ' nächst mögliche id laden
+        sql_id = "select case (select count(*) from zus_FLSSyncDate) when 0 then 1 else (select max(syncid) from ZUS_FLSSyncDate) + 1 end as id"
+        If Not MyConn.getRecord(rs_id, sql_id, fehler) Then
+            Logger.GetInstance.Log("Fehler beim Laden der nächsten Id in ZUS_FLSSyncDate " + fehler)
+            Return False
+        End If
+        If rs_id.EOF Then
+            Logger.GetInstance.Log("kein Record geladen für " + sql_id)
+            Return False
+        End If
+        While Not rs_id.EOF
+            id = CInt(rs_id.Fields("id").Value)
+            rs_id.MoveNext()
+        End While
+
         Try
             ' LastDate updaten (nicht über pxBook AddZusatztabelleWerte(), da es Datum nicht richtig frisst)
             sql = "insert into ZUS_FLSSyncDate " + _
-                "(SyncId, " +
-                "SyncDate, " +
-                "SyncType, " +
-                "LaufNr, " +
-                "ImportNr, " +
-                "erstelltAm, " +
-                "erstelltVon, " +
-                "geaendertAm, " +
-                "geaendertVon, " +
-                "geaendert, " +
-                "exportiert" +
-                ") values (" +
-            "(select case (select count(*) from zus_FLSSyncDate) when 0 then 1 else (select max(syncid) from ZUS_FLSSyncDate) + 1 end), '" +
-            lastDate.ToString(dateTimeFormat) + "', '" +
-            synctype + "', " +
-            GetNextLaufNr("ZUS_FLSSyncDate").ToString + ", " +
-            "0, '" +
-            Now.ToString(dateTimeFormat) + "', '" +
-            Assembly.GetExecutingAssembly().GetName.Name + "', '" +
-            Now.ToString(dateTimeFormat) + "', '" +
-            Assembly.GetExecutingAssembly().GetName.Name + "', " +
-            "1, 0)"
+          "(SyncId, " +
+          "SyncDate, " +
+          "SyncType, " +
+          "LaufNr, " +
+          "ImportNr, " +
+          "erstelltAm, " +
+          "erstelltVon, " +
+          "geaendertAm, " +
+          "geaendertVon, " +
+          "geaendert, " +
+          "exportiert" +
+          ") values (" +
+      "" + id.ToString + ", '" +
+      lastDate.ToString(dateTimeFormat) + "', '" +
+      synctype + "', " +
+      GetNextLaufNr("ZUS_FLSSyncDate").ToString + ", " +
+      "0, '" +
+      Now.ToString(dateTimeFormat) + "', '" +
+      Assembly.GetExecutingAssembly().GetName.Name + "', '" +
+      Now.ToString(dateTimeFormat) + "', '" +
+      Assembly.GetExecutingAssembly().GetName.Name + "', " +
+      "1, 0)"
+
+            'sql = "insert into ZUS_FLSSyncDate " + _
+            '    "(SyncId, " +
+            '    "SyncDate, " +
+            '    "SyncType, " +
+            '    "LaufNr, " +
+            '    "ImportNr, " +
+            '    "erstelltAm, " +
+            '    "erstelltVon, " +
+            '    "geaendertAm, " +
+            '    "geaendertVon, " +
+            '    "geaendert, " +
+            '    "exportiert" +
+            '    ") values (" +
+            '"(select case (select count(*) from zus_FLSSyncDate) when 0 then 1 else (select max(syncid) from ZUS_FLSSyncDate) + 1 end), '" +
+            'lastDate.ToString(dateTimeFormat) + "', '" +
+            'synctype + "', " +
+            'GetNextLaufNr("ZUS_FLSSyncDate").ToString + ", " +
+            '"0, '" +
+            'Now.ToString(dateTimeFormat) + "', '" +
+            'Assembly.GetExecutingAssembly().GetName.Name + "', '" +
+            'Now.ToString(dateTimeFormat) + "', '" +
+            'Assembly.GetExecutingAssembly().GetName.Name + "', " +
+            '"1, 0)"
 
             If Not MyConn.getRecord(rs_lastSync, sql, fehler) Then
                 Logger.GetInstance.Log("Fehler in " + MethodBase.GetCurrentMethod.Name + " " + fehler)
@@ -248,9 +289,20 @@ Public Class ProffixHelper
         Dim sql_dokflightlink As String = String.Empty
         Dim fehler As String = String.Empty
 
-        Logger.GetInstance.Log(LogLevel.Info, "Die Daten für die DeliveryId " + DeliveryId + " werden aus Proffix gelöscht.")
-
+        If logAusfuehrlich Then
+            Logger.GetInstance.Log(LogLevel.Info, "Die Daten für die DeliveryId " + DeliveryId + " werden aus Proffix gelöscht.")
+        End If
         '****************************************************************DocPos löschen************************************************************************
+        '' die docNr + PosNr für die zu löschenden DocPos zwischenspeichern um in LAG_Statistik die richtigen Positionen zu finden
+        'sql_pos = "select dokumentnrauf, artikelnr, mengeaus from AUF_DokumentPos where Z_DeliveryId = '" + DeliveryId + "'"
+        'If Not MyConn.getRecord(rs_pos_sel, sql_pos_sel, fehler) Then
+        '    Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Ermitteln der zu löschenden Positionen. DeliveryId: " + DeliveryId + fehler)
+        '    Return False
+        'End If
+
+        ' TODO Lagerabtrag rückgängig machen, falls in AUF_Doktypen für "Lieferschein" lagerabtrag = 1 gilt. Problem: Derselbe Artikel kann in 1 Dok in mehreren Positionen vorkommen 
+        ' --> in LAG_Statistik kann man den zugehörigen Datensatz nciht identifizieren --> es würde jedesmal beim Funktionsaufruf die Menge abgezogen, solange es diesen Artikel auf dem Dok hat
+
         sql_pos = "Delete from AUF_DokumentPos where Z_DeliveryId = '" + DeliveryId + "'"
         If Not MyConn.getRecord(rs_pos, sql_pos, fehler) Then
             Logger.GetInstance.Log(LogLevel.Exception, "Fehler beim Löschen der Positionen. DeliveryId: " + DeliveryId + fehler)
@@ -269,6 +321,7 @@ Public Class ProffixHelper
 
         ' für jede der verwaisten DocNr...
         While Not rs_doknr.EOF
+            Dim dokNr As Integer = CInt(rs_doknr.Fields("doknr").Value)
 
             ' Doc mit DokNr löschen
             sql_delete = "Delete from auf_dokumente where dokumentnrauf = " + rs_doknr.Fields("doknr").Value.ToString
@@ -305,7 +358,9 @@ Public Class ProffixHelper
         'Dim sql_dokflightlink As String = String.Empty
         Dim fehler As String = String.Empty
 
-        Logger.GetInstance.Log(LogLevel.Info, "Die Daten für die FlightId " + flightid + " werden aus Proffix gelöscht.")
+        If logAusfuehrlich Then
+            Logger.GetInstance.Log(LogLevel.Info, "Die Daten für die FlightId " + flightid + " werden aus Proffix gelöscht.")
+        End If
 
         sql = "Delete from ZUS_Flights where FlightId = '" + flightid + "'"
         If Not MyConn.getRecord(rs, sql, fehler) Then
@@ -951,37 +1006,37 @@ Public Class ProffixHelper
     ''' <returns>Der SQL String</returns>
     Public Shared Function CreateZusatzFelderSql(ByVal source As pxKommunikation.pxAdressen) As String
         'Definieren der Zusatzfelder liste
-        Dim values As New Dictionary(Of String, String) From {
-            {"Z_Segelfluglehrer_Lizenz", GetZusatzFelder(source, "Z_Segelfluglehrer_Lizenz")},
-            {"Z_Segelflugpilot_Lizenz", GetZusatzFelder(source, "Z_Segelflugpilot_Lizenz")},
-            {"Z_Segelflugschueler_Lizenz", GetZusatzFelder(source, "Z_Segelflugschueler_Lizenz")},
-            {"Z_Motorflugpilot_Lizenz", GetZusatzFelder(source, "Z_Motorflugpilot_Lizenz")},
-            {"Z_Schleppilot_Lizenz", GetZusatzFelder(source, "Z_Schleppilot_Lizenz")},
-            {"Z_Segelflugpassagier_Lizenz", GetZusatzFelder(source, "Z_Segelflugpassagier_Lizenz")},
-            {"Z_TMG_Lizenz", GetZusatzFelder(source, "Z_TMG_Lizenz")},
-            {"Z_Windenfuehrer_Lizenz", GetZusatzFelder(source, "Z_Windenfuehrer_Lizenz")},
-            {"Z_Motorfluglehrer_Lizenz", GetZusatzFelder(source, "Z_Motorfluglehrer_Lizenz")},
-            {"Z_Schleppstart_Zulassung", GetZusatzFelder(source, "Z_Schleppstart_Zulassung")},
-            {"Z_Eigenstart_Zulassung", GetZusatzFelder(source, "Z_Eigenstart_Zulassung")},
-            {"Z_Windenstart_Zulassung", GetZusatzFelder(source, "Z_Windenstart_Zulassung")},
-            {"Z_SpotURL", "'" + GetZusatzFelder(source, "Z_SpotURL") + "'"},
-            {"Z_Email_Geschaeft", "'" + GetZusatzFelder(source, "Z_Email_Geschaeft") + "'"},
-            {"Z_Lizenznummer", "'" + GetZusatzFelder(source, "Z_Lizenznummer") + "'"},
-            {"Z_FLSPersonId", "'" + GetZusatzFelder(source, "Z_FLSPersonId") + "'"},
-            {"Z_Segelflugpilot", GetZusatzFelder(source, "Z_Segelflugpilot")},
-            {"Z_Segelfluglehrer", GetZusatzFelder(source, "Z_Segelfluglehrer")},
-            {"Z_Segelflugschueler", GetZusatzFelder(source, "Z_Segelflugschueler")},
-            {"Z_Motorflugpilot", GetZusatzFelder(source, "Z_Motorflugpilot")},
-            {"Z_Motorfluglehrer", GetZusatzFelder(source, "Z_Motorfluglehrer")},
-            {"Z_Passagier", GetZusatzFelder(source, "Z_Passagier")},
-            {"Z_Schleppilot", GetZusatzFelder(source, "Z_Schleppilot")},
-            {"Z_Windenfuehrer", GetZusatzFelder(source, "Z_Windenfuehrer")},
-            {"Z_erhaeltFlugreport", GetZusatzFelder(source, "Z_erhaeltFlugreport")},
-            {"Z_erhaeltReservationsmeldung", GetZusatzFelder(source, "Z_erhaeltReservationsmeldung")},
-            {"Z_erhaeltPlanungserinnerung", GetZusatzFelder(source, "Z_erhaeltPlanungserinnerung")},
-            {"Z_erhaeltFlugStatistikenZuEigenen", GetZusatzFelder(source, "Z_erhaeltFlugStatistikenZuEigenen")},
-            {"Z_MemberStateId", "'" + GetZusatzFelder(source, "Z_MemberStateId") + "'"}
-        }
+        Dim values As New Dictionary(Of String, String)
+
+        values.Add("Z_Segelfluglehrer_Lizenz", GetZusatzFelder(source, "Z_Segelfluglehrer_Lizenz"))
+        values.Add("Z_Segelflugpilot_Lizenz", GetZusatzFelder(source, "Z_Segelflugpilot_Lizenz"))
+        values.Add("Z_Segelflugschueler_Lizenz", GetZusatzFelder(source, "Z_Segelflugschueler_Lizenz"))
+        values.Add("Z_Motorflugpilot_Lizenz", GetZusatzFelder(source, "Z_Motorflugpilot_Lizenz"))
+        values.Add("Z_Schleppilot_Lizenz", GetZusatzFelder(source, "Z_Schleppilot_Lizenz"))
+        values.Add("Z_Segelflugpassagier_Lizenz", GetZusatzFelder(source, "Z_Segelflugpassagier_Lizenz"))
+        values.Add("Z_TMG_Lizenz", GetZusatzFelder(source, "Z_TMG_Lizenz"))
+        values.Add("Z_Windenfuehrer_Lizenz", GetZusatzFelder(source, "Z_Windenfuehrer_Lizenz"))
+        values.Add("Z_Motorfluglehrer_Lizenz", GetZusatzFelder(source, "Z_Motorfluglehrer_Lizenz"))
+        values.Add("Z_Schleppstart_Zulassung", GetZusatzFelder(source, "Z_Schleppstart_Zulassung"))
+        values.Add("Z_Eigenstart_Zulassung", GetZusatzFelder(source, "Z_Eigenstart_Zulassung"))
+        values.Add("Z_Windenstart_Zulassung", GetZusatzFelder(source, "Z_Windenstart_Zulassung"))
+        values.Add("Z_SpotURL", "'" + GetZusatzFelder(source, "Z_SpotURL") + "'")
+        values.Add("Z_Email_Geschaeft", "'" + GetZusatzFelder(source, "Z_Email_Geschaeft") + "'")
+        values.Add("Z_Lizenznummer", "'" + GetZusatzFelder(source, "Z_Lizenznummer") + "'")
+        values.Add("Z_FLSPersonId", "'" + GetZusatzFelder(source, "Z_FLSPersonId") + "'")
+        values.Add("Z_Segelflugpilot", GetZusatzFelder(source, "Z_Segelflugpilot"))
+        values.Add("Z_Segelfluglehrer", GetZusatzFelder(source, "Z_Segelfluglehrer"))
+        values.Add("Z_Segelflugschueler", GetZusatzFelder(source, "Z_Segelflugschueler"))
+        values.Add("Z_Motorflugpilot", GetZusatzFelder(source, "Z_Motorflugpilot"))
+        values.Add("Z_Motorfluglehrer", GetZusatzFelder(source, "Z_Motorfluglehrer"))
+        values.Add("Z_Passagier", GetZusatzFelder(source, "Z_Passagier"))
+        values.Add("Z_Schleppilot", GetZusatzFelder(source, "Z_Schleppilot"))
+        values.Add("Z_Windenfuehrer", GetZusatzFelder(source, "Z_Windenfuehrer"))
+        values.Add("Z_erhaeltFlugreport", GetZusatzFelder(source, "Z_erhaeltFlugreport"))
+        values.Add("Z_erhaeltReservationsmeldung", GetZusatzFelder(source, "Z_erhaeltReservationsmeldung"))
+        values.Add("Z_erhaeltPlanungserinnerung", GetZusatzFelder(source, "Z_erhaeltPlanungserinnerung"))
+        values.Add("Z_erhaeltFlugStatistikenZuEigenen", GetZusatzFelder(source, "Z_erhaeltFlugStatistikenZuEigenen"))
+        values.Add("Z_MemberStateId", "'" + GetZusatzFelder(source, "Z_MemberStateId") + "'")
 
         'Umwandeln des Dictionary in ein SQL String
         Dim sql As String = String.Empty
@@ -1043,7 +1098,7 @@ Public Class ProffixHelper
                 geloescht = "0"
             End If
 
-            sql = "update adr_adressen set geloescht = " + geloescht + " where Z_FLSPersonId = '" + person("PersonId").ToString + "'"
+            sql = "update adr_adressen set geloescht = " + geloescht + " where Z_FLSPersonId = '" + person("PersonId").ToString.ToLower.Trim + "'"
             If Not MyConn.getRecord(rs, sql, fehler) Then
                 Throw New Exception(fehler)
             End If

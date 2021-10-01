@@ -50,7 +50,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DocumentationFile>FlsGliderSync.xml</DocumentationFile>
     <NoWarn>42353,42354,42355</NoWarn>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <WarningsAsErrors>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -86,32 +86,32 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Interop.ADODB">
-      <HintPath>..\..\..\..\..\PROFFIX\PROFFIX_v4.0.15\Prog\Interop.ADODB.dll</HintPath>
+      <HintPath>..\DLLs\Interop.ADODB.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="pxBook, Version=4.0.0.1, Culture=neutral, PublicKeyToken=e3335efe194d08f8, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\PROFFIX\PROFFIX_v4.0.20\Prog\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="pxBook">
-      <HintPath>..\..\..\..\..\PROFFIX\PROFFIX_v4.0.20\Prog\pxBook.dll</HintPath>
+      <HintPath>..\DLLs\pxBook.dll</HintPath>
     </Reference>
     <Reference Include="pxModul">
-      <HintPath>..\..\..\..\..\PROFFIX\PROFFIX_v4.0.20\Prog\pxModul.dll</HintPath>
+      <HintPath>..\DLLs\pxModul.dll</HintPath>
     </Reference>
     <Reference Include="pxTools">
-      <HintPath>..\..\..\..\..\PROFFIX\PROFFIX_v4.0.20\Prog\pxTools.dll</HintPath>
+      <HintPath>..\DLLs\pxTools.dll</HintPath>
     </Reference>
     <Reference Include="SMC.Lib">
-      <HintPath>\\support02\Trans\FLS_Backup_ORIG\FLS\SMC\SMC\bin\Debug\SMC.Lib.dll</HintPath>
+      <HintPath>..\DLLs\SMC.Lib.dll</HintPath>
     </Reference>
     <Reference Include="SMC.Proffix">
-      <HintPath>\\support02\Trans\FLS_Backup_ORIG\FLS\SMC\SMC.Proffix\bin\Debug\SMC.Proffix.dll</HintPath>
+      <HintPath>..\DLLs\SMC.Proffix.dll</HintPath>
     </Reference>
     <Reference Include="System">
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Net.Http" />
@@ -156,11 +156,11 @@
     <Compile Include="Helper\FLS\FlsHelper.vb" />
     <Compile Include="Processes\GeneralDataLoader.vb" />
     <Compile Include="Processes\LinkAdressen.vb" />
-    <Compile Include="Mapper\ArticleMapper.vb" />
+    <Compile Include="Helper\Mapper\ArticleMapper.vb" />
     <Compile Include="Processes\Exporter.vb" />
     <Compile Include="Helper\Proffix\ProffixConnection.vb" />
     <Compile Include="FlsGliderSync.vb" />
-    <Compile Include="Mapper\ClubMapper.vb" />
+    <Compile Include="Helper\Mapper\ClubMapper.vb" />
     <Compile Include="Helper\Proffix\ProffixHelper.vb" />
     <Compile Include="Processes\Importer.vb" />
     <Compile Include="Forms\FrmDatabaseAuswahl.designer.vb">
@@ -181,12 +181,13 @@
     <Compile Include="Forms\FrmSettings.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Mapper\Mapper.vb" />
-    <Compile Include="Mapper\MappingProperty.vb" />
+    <Compile Include="Helper\Mapper\Mapper.vb" />
+    <Compile Include="Helper\Mapper\MappingProperty.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="My Project\Resources.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -198,7 +199,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Mapper\PersonMapper.vb" />
+    <Compile Include="Helper\Mapper\PersonMapper.vb" />
     <Compile Include="Helper\FLS\FlsConnection.vb" />
     <Compile Include="Processes\Syncers\PersonDeleter.vb" />
     <Compile Include="Processes\Syncers\PersonLoader.vb" />

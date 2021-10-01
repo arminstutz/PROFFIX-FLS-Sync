@@ -114,9 +114,18 @@ Module GeneralHelper
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function readFromIni(ByVal key As String, Optional mustexist As Boolean = True) As String
-
+        Dim reader As StreamReader
+        Dim strIniUserDef As String = String.Empty
         Dim appname As String = Assembly.GetExecutingAssembly().GetName.Name
-        Dim reader As New StreamReader(appname + ".ini")
+        Try
+            strIniUserDef = CStr(Registry.GetValue("HKEY_CURRENT_USER\Software\PROFFIX.NET\smcAnwendungen\" + appname, "iniUserDef", ""))
+
+            reader = New StreamReader(strIniUserDef)
+        Catch ex As Exception
+            MsgBox("Datei " + striniuserdef + " wurde nicht gefunden")
+            Return String.Empty
+        End Try
+
         Dim sLine As String = ""
         Dim iniLine As String = ""
 
@@ -152,10 +161,10 @@ Module GeneralHelper
 
         If value = "1" Then
             Return True
-        ElseIf value = "0" Or value = "" Then
+        ElseIf value = "0" Then 'Or value = ""
             Return False
         Else
-            MessageBox.Show("Für den Wert LogAusfuehrlich muss in der Konfigurationsdatei nichts, 0 oder 1 angegeben werden")
+            MessageBox.Show("Für den Wert LogAusfuehrlich muss in der Konfigurationsdatei 0 oder 1 angegeben werden") 'nichts,
             Return False
         End If
 

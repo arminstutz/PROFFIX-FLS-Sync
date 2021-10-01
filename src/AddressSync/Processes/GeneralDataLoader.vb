@@ -81,7 +81,7 @@ Public Class GeneralDataLoader
                 End If
 
                 ' Infos zu Ländern aus FLS laden
-                locations = flsClient.CallAsyncAsJArray("https://test.glider-fls.ch/api/v1/locations/overview")
+                locations = flsClient.CallAsyncAsJArray(My.Settings.ServiceAPILocationsMethod)
                 locations.Wait()
 
                 ' Infos in ZUS_FLSLocations schreiben
@@ -216,7 +216,7 @@ Public Class GeneralDataLoader
                     "Geaendert, " +
                     "Exportiert" +
                             ") values (" +
-                                "'" + person("PersonId").ToString + "', " +
+                                "'" + person("PersonId").ToString.ToLower.Trim + "', " +
                                 FlsHelper.GetValOrDefString(person, "Lastname") + ", " +
                                 FlsHelper.GetValOrDefString(person, "Firstname") + ", " +
                                 FlsHelper.GetValOrDefString(person, "City") + ", " +
@@ -303,7 +303,7 @@ Public Class GeneralDataLoader
             Return True
 
         Catch ex As Exception
-            Logger.GetInstance.Log(LogLevel.Exception, "1111 " & ex.Message)
+            Logger.GetInstance.Log(LogLevel.Exception, ex.Message)
             Return False
         End Try
 
@@ -376,6 +376,9 @@ Public Class GeneralDataLoader
                     Return False
                 End If
             Next
+
+            Logger.GetInstance.Log("Allfällige Daten für noch nicht importierte " + notProcessedDeliveries.Result.Children.Count.ToString + " Deliveries wurden gelöscht")
+
         Catch ex As Exception
             Return False
         End Try
@@ -402,6 +405,9 @@ Public Class GeneralDataLoader
                 'End If
                 'End If
             Next
+            '  Logger.GetInstance.Log(LogLevel.Info, "flugdaten werden gelöscht")
+            Logger.GetInstance.Log("Allfällige Daten für noch zu importierte " + modifiedFlights.Children.Count.ToString + " Flüge wurden gelöscht")
+
             Return True
 
         Catch ex As Exception

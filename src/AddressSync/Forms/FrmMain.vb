@@ -19,10 +19,14 @@ Imports System.Reflection
 ' --> für Installation beim Kunden muss "Testumgebung=1" aus dem ini entfernt werden
 ' --> bei Installation: URLs prüfen (werden in log angegeben, sofern in .ini logAusfuehrlich = 1)
 
+' im Ini kann angegeben werden, falls alle Adressen vom einen zum anderen System geupdatet werden sollen (letzte Änderung wird dann ignoriert) Dies ist bei der 1. Synchronisation nötig, da dann nur FLS die Werte der Zusatzfelder kennt
+' im ini muss immer master= stehen. Falls master=fls steht, werden alle Adressen von fls in PX geschrieben. Umgekehrt mit master=proffix
+' Bei Installtion des Programms muss somit im ini master=fls gesetzt werden, und nach der 1. Synchronisation master= gesetzt werden
+
 '- relevante Webseiten + Anmeldung: 
 '   - https://test.glider-fls.ch bzw. https://fls.glider-fls.ch --> API --> welche Methoden könen aufgerufen werden
-'   - https://test.glider-fls.ch/client --> Anmeldung Testumgebung (User: fgzoproffix, PW: Proffix2016$)
-'   - https://fls.glider-fls.ch/client --> Anmeldung FLS (User: sgnproffix, PW: SGNProffix2016$)
+'   - https://test.glider-fls.ch/client --> Anmeldung Testumgebung (Userdaten: bei Patrick Schuler anfragen)
+'   - https://fls.glider-fls.ch/client --> Anmeldung FLS (Userdaten: bei Patrick Schuler anfragen)
 
 
 '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -100,7 +104,7 @@ Public Class FrmMain
     End Sub
 
     '*******************************************************************Klasse FrmMain***********************************************************************************
-    Private GoBook As New pxBook.pxKommunikation
+    ' Private GoBook As New pxBook.pxKommunikation
     Private Property frmSettings As FrmSettings
     Private Property frmLS As FrmLSManage
 
@@ -156,7 +160,7 @@ Public Class FrmMain
         ' wenn aus irgend einem Grund die Settings auf die Testumgebung umgestellt haben --> wieder auf scharfe Version umstellen (Anmeldedaten fallen aber raus)
         If My.Settings.ServiceAPITokenMethod.Contains("test.glider-fls.ch") Then
             fuerScharfeVersionAnpassen()
-            If LogAusfuehrlich Then
+            If logAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, "fuerScharfeVersionAnpassen() wurde ausgeführt")
             End If
         End If
@@ -165,12 +169,25 @@ Public Class FrmMain
         ' wenn der key "Testumgebung" in ini fehlt, --> scharfe Version
         If readFromIni("Testumgebung", False) = "1" Then
             fuerTestVersionAnpassen()
-            If LogAusfuehrlich Then
+            If logAusfuehrlich Then
                 Logger.GetInstance.Log(LogLevel.Info, "fuerTestversionAnpassen() wurde ausgeführt")
             End If
         End If
 
-        If LogAusfuehrlich Then
+        ' auslesen, ob ein Master definiert ist
+        ' wenn master=fls --> Beim Sync wird im Fall eines Updates immer PX mit FLS überschrieben (benötigt bei 1. Synchronisation)
+        ' wenn master=proffix --> Beim sync wird im Fall eines Updates immer FLS mit PX überschrieben
+        ' in allen anderen Fällen "master= ,master=irgendwasanderes --> Beim Sync wird im Fall eiens updates die zuletzt veränderte Adresse verwendet
+        Dim masterdb As String = readFromIni("master").ToLower
+        If masterdb = "fls" Then
+            Master = UseAsMaster.fls
+        ElseIf masterdb = "proffix" Then
+            Master = UseAsMaster.proffix
+        Else
+            Master = UseAsMaster.undefined
+        End If
+
+        If logAusfuehrlich Then
             Logger.GetInstance.Log(LogLevel.Info, My.Settings.ServiceAPITokenMethod)
             Logger.GetInstance.Log(LogLevel.Info, My.Settings.ServiceAPIPersonMethod)
             Logger.GetInstance.Log(LogLevel.Info, My.Settings.ServiceAPIDeliveriesNotProcessedMethod)
@@ -213,6 +230,7 @@ Public Class FrmMain
         'verwendeter Account anzeigen
         lblAccount.Text = My.Settings.Username
         '*****************************************************************bei Proffix anmelden*****************************************************************
+        Proffix.GoBook.LoginUser = Assembly.GetExecutingAssembly().GetName.Name
         ' mit Proffix verbinden und anzeigen, ob erfolgreich
         If Not Proffix.Open() Then
             Log("Proffix-Anmeldung fehlgeschlagen.")
@@ -360,7 +378,7 @@ Public Class FrmMain
 
     '*********************************************************************************Prozesse**********************************************************************************
     Private Sub DoLoadGeneralData()
-       
+
         Log("Laden allgemeiner Daten gestartet")
         Logger.GetInstance.Log(LogLevel.Info, "Allgemeine Daten werden geladen")
         If Not generalLoader.loadGeneralData() Then
@@ -387,7 +405,7 @@ Public Class FrmMain
 
     Private Sub LinkerWork()
         Try
-            ' MessageBox.Show("Debug: Linker wird übersprungen. Ist in LinkerWork() auskommentiert", "")
+            'MessageBox.Show("Debug: Linker wird übersprungen. Ist in LinkerWork() auskommentiert", "")
             linkersuccessful = Linker.Link()
         Catch exce As Exception
             'Den Fehler ausgeben und zurücksetzen
@@ -443,7 +461,7 @@ Public Class FrmMain
     ''' </summary>
     Private Sub SyncerWork()
         Try
-            ' MsgBox("Debug: Adresssync wird übersprungen. Syncer.Sync in FrmMain auskommentiert.")
+            'MsgBox("Debug: Adresssync wird übersprungen. Syncer.Sync in FrmMain auskommentiert.")
             syncsuccessful = Syncer.Sync()
         Catch exce As Exception
             'Den Fehler ausgeben und zurücksetzen
@@ -478,7 +496,7 @@ Public Class FrmMain
             logException(SyncerException)
             'EndWork()
         End If
-       
+
         syncProcessFinished = True
         startNextProcess(If(SyncerException Is Nothing, False, True))
     End Sub
@@ -739,7 +757,7 @@ Public Class FrmMain
     '************************************************************************Button Clicks***********************************************************************************
 
     ' wenn Lieferscheine und Flüge synchronisert werden sollen, müssen die Adressen aktuell sein --> müssen ebenfalls synchronisiert werden
-     Private Sub cbLieferscheine_CheckedChanged(sender As Object, e As EventArgs) Handles cbLieferscheine.CheckedChanged
+    Private Sub cbLieferscheine_CheckedChanged(sender As Object, e As EventArgs) Handles cbLieferscheine.CheckedChanged
         If cbLieferscheine.Checked Then
             cbAdressen.Checked = True
         End If
@@ -748,7 +766,7 @@ Public Class FrmMain
     Private Sub cbFluege_CheckedChanged(sender As Object, e As EventArgs) Handles cbFluege.CheckedChanged
         If cbFluege.Checked Then
             cbAdressen.Checked = True
-          End If
+        End If
     End Sub
 
     ' Adressen müssen auch synchronisiert werden, wenn Lieferscheine erstellt bzw Flugdaten importiert werden sollen, da sonst Verknüpfung möglicherweise fehlt
@@ -779,11 +797,11 @@ Public Class FrmMain
     'End Sub
 
 
-        ''' <summary>
-        ''' Es wurde auf "Einstellungen" geklickt
-        ''' </summary>
-        ''' <param name="sender">Der Button</param>
-        ''' <param name="e">Informationen zum Event</param>
+    ''' <summary>
+    ''' Es wurde auf "Einstellungen" geklickt
+    ''' </summary>
+    ''' <param name="sender">Der Button</param>
+    ''' <param name="e">Informationen zum Event</param>
     Private Async Sub tsmiSettings_Click(ByVal sender As Object, ByVal e As EventArgs) Handles tsmiSettings.Click
         ' Form auf nicht anklickbar stellen
         enableFormElements(False)
@@ -958,7 +976,7 @@ Public Class FrmMain
     ''' </summary>
     ''' <param name="exce"></param>
     Private Sub logException(ByVal exce As Exception)
-        If LogAusfuehrlich Then
+        If logAusfuehrlich Then
 
             Log("---------------------------------------------------------------------------------------------------")
             Log("Folgender Fehler ist aufgetreten")
@@ -1182,15 +1200,19 @@ Public Class FrmMain
 
     Private Sub tsmiClearLink_Click(sender As Object, e As EventArgs) Handles tsmiClearLink.Click
         PrepareWork()
-        If DialogResult.OK = MessageBox.Show("Sind Sie sicher, dass Sie die Verknüpfung der Adressen aus FLS und Proffix aufheben wollen? " + vbCrLf + vbCrLf +
-                                             "Wenn sie danach die nächste Adresssynchronisation ausführen, werden die Adressen neu verknüpft." + vbCrLf + vbCrLf +
-                                             "Danach werden alle Adressen in FLS als aktueller gelten und in Proffix aktualisiert!!!", "Verknüpfung wirklich löschen?", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) Then
-            If Not Linker.verknuepfungenAufheben() Then
-                Log("Fehler beim Aufheben der Verknüpfungen der Adresse")
-            Else
-                Log("Verknüpfungen erfolgreich aufgehoben")
-            End If
-        End If
+        MsgBox("Steht momentan nicht zur Verfügung. Wenden Sie sich an den Support von FLS oder SMC Computer AG wenn Sie wirklich alle Adressen neu verknüpfen wollen.", vbCritical)
+
+        ' steht dem User momemtan nicht zur Verfügung, da eine Neuverknüpfung Fehlerpotential besitzt
+
+        'If DialogResult.OK = MessageBox.Show("Sind Sie sicher, dass Sie die Verknüpfung der Adressen aus FLS und Proffix aufheben wollen? " + vbCrLf + vbCrLf +
+        '                                     "Wenn sie danach die nächste Adresssynchronisation ausführen, werden die Adressen neu verknüpft." + vbCrLf + vbCrLf +
+        '                                     "Danach werden alle Adressen in FLS als aktueller gelten und in Proffix aktualisiert!!!", "Verknüpfung wirklich löschen?", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) Then
+        '    If Not Linker.verknuepfungenAufheben() Then
+        '        Log("Fehler beim Aufheben der Verknüpfungen der Adresse")
+        '    Else
+        '        Log("Verknüpfungen erfolgreich aufgehoben")
+        '    End If
+        'End If
         EndWork()
     End Sub
 

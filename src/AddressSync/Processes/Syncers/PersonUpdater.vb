@@ -22,15 +22,56 @@ Public Class PersonUpdater
         Me.Log = Log
     End Sub
 
-    Public Function update(ByVal person As JObject, ByVal address As pxKommunikation.pxAdressen, ByVal lastSync As DateTime) As Boolean
+    ' updates the address
+    Public Function updateAccordingMaster(ByVal person As JObject, ByVal address As pxKommunikation.pxAdressen, ByVal master As UseAsMaster) As Boolean
+
+        If logAusfuehrlich Then
+            Logger.GetInstance.Log(LogLevel.Info, "In beiden vorhanden PersonId: " + person("PersonId").ToString.ToLower.Trim + " AdressNr: " + address.AdressNr.ToString)
+        End If
+
+
+        '***************************************************************************************UPDATE IN PROFFIX***********************************************************
+        If master = UseAsMaster.fls Then
+
+            'Die Adresse wird in PROFFIX aktualisiert
+            If Not updateInProffix(person, address, rs_adressdefault) Then
+                Return False
+            End If
+
+            '******************************************************************************UPDATE IN FLS******************************************************************
+        ElseIf master = UseAsMaster.proffix Then
+
+            ' wenn die Adresse synchronisiert werden soll
+            If CInt(ProffixHelper.GetZusatzFelder(address, "Z_Synchronisieren")) = 1 Then
+
+                ' in FLS updaten
+                If Not updateInFLS(person, address) Then
+                    Return False
+                End If
+
+            End If
+
+            ' keine DB wurde als Master definiert --> das hier ist für diesen Fall die falsche Funktion
+        Else
+            Logger.GetInstance.Log(LogLevel.Exception, "Fehler in " + MethodBase.GetCurrentMethod.Name + " master hat nicht den Wert fls oder proffix, sondern " + master.ToString)
+            Return False
+        End If
+
+        Return True
+    End Function
+
+
+
+
+    Public Function updateAccordingDate(ByVal person As JObject, ByVal address As pxKommunikation.pxAdressen, ByVal lastSync As DateTime) As Boolean
         'Flag auf Default false setzen
         Dim newerInFLS As Boolean = False
         Dim newerInProffix As Boolean = False
         Dim adressChangeDate As DateTime
         Dim personChangeDate As DateTime = CDate(FlsHelper.GetPersonChangeDate(person))
 
-        If LogAusfuehrlich Then
-            Logger.GetInstance.Log(LogLevel.Info, "In beiden vorhanden PersonId: " + person("PersonId").ToString + " AdressNr: " + address.AdressNr.ToString)
+        If logAusfuehrlich Then
+            Logger.GetInstance.Log(LogLevel.Info, "In beiden vorhanden PersonId: " + person("PersonId").ToString.ToLower.Trim + " AdressNr: " + address.AdressNr.ToString)
         End If
 
         ' Änderungsdatum auslesen
@@ -81,7 +122,7 @@ Public Class PersonUpdater
         Dim fehler As String = String.Empty
         Dim successful As Boolean = True
 
-        If LogAusfuehrlich Then
+        If logAusfuehrlich Then
             Logger.GetInstance.Log(LogLevel.Info, "Adresse zum updaten: " + person.ToString)
         End If
 
@@ -106,7 +147,7 @@ Public Class PersonUpdater
 
         ' IsActive/Geloescht synchronisieren
         If Not pxhelper.SetGeloeschtInPXAdresseDependingOnIsActive(person) Then
-            logComplete("Fehler beim Updaten des Geloescht Feldes in Proffix. PersonId: " + person("PersonId").ToString, LogLevel.Exception)
+            logComplete("Fehler beim Updaten des Geloescht Feldes in Proffix. PersonId: " + person("PersonId").ToString.ToLower.Trim, LogLevel.Exception)
         End If
 
         logComplete("Aktualisiert in Proffix: AdressNr: " + address.AdressNr.ToString + " Nachname: " + address.Name + " Vorname: " + If(address.Vorname IsNot Nothing, address.Vorname, ""), LogLevel.Info)
@@ -128,7 +169,7 @@ Public Class PersonUpdater
         person = personMapper.Mapp(address, person)
 
         '' clubRel Werte updaten
-        person = ClubMapper.Mapp(address, person)
+        person = clubMapper.Mapp(address, person)
 
         ' möglicherweise falsche MemberNr/AdressNr in FLS wieder synchronisieren
         person("ClubRelatedPersonDetails")("MemberNumber") = address.AdressNr
@@ -147,13 +188,13 @@ Public Class PersonUpdater
                 Return False
             End If
 
-            If LogAusfuehrlich Then
+            If logAusfuehrlich Then
                 Logger.GetInstance.Log(MethodBase.GetCurrentMethod().Name + person.ToString)
             End If
 
             ' Geloescht/IsActive in FLS updaten
             If Not pxhelper.SetIsActiveInFLSPersonDependingOnGeloescht(person, address.AdressNr.ToString) Then
-                logComplete("Fehler beim Updaten des Geloescht Feldes in Proffix. PersonId: " + person("PersonId").ToString, LogLevel.Exception)
+                logComplete("Fehler beim Updaten des Geloescht Feldes in Proffix. PersonId: " + person("PersonId").ToString.ToLower.Trim, LogLevel.Exception)
                 Return False
             End If
 
@@ -162,7 +203,7 @@ Public Class PersonUpdater
             ' End If
 
             'Adresse in FLS updaten (mit Änderungen, die in Proffix gemacht wurden
-            response_FLS = _serviceClient.SubmitChanges(person("PersonId").ToString(), person, SyncerCommitCommand.Update)
+            response_FLS = _serviceClient.SubmitChanges(person("PersonId").ToString.ToLower.Trim, person, SyncerCommitCommand.Update)
             If response_FLS <> "OK" Then
                 logComplete("Fehler beim Updaten In FLS: AdressNr: " + address.AdressNr.ToString + "Nachname: " + address.Name + " Vorname: " + If(address.Vorname IsNot Nothing, address.Vorname, "") + address.Name, LogLevel.Exception, response_FLS + " " + person.ToString)
                 Return False
@@ -177,7 +218,7 @@ Public Class PersonUpdater
 
     ' schreibt in Log und in Logger (File)
     Private Sub logComplete(ByVal logString As String, ByVal loglevel As LogLevel, Optional ByVal zusatzloggerString As String = "")
-        If Log IsNot Nothing Then Log.Invoke(If(loglevel <> loglevel.Info, vbTab, "") + logString)
+        If Log IsNot Nothing Then Log.Invoke(If(loglevel <> LogLevel.Info, vbTab, "") + logString)
         Logger.GetInstance.Log(loglevel, logString + " " + zusatzloggerString)
     End Sub
 

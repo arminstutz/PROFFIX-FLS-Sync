@@ -1,4 +1,5 @@
-﻿Imports SMC.Lib
+﻿Imports Newtonsoft.Json.Linq
+Imports SMC.Lib
 Imports System.Reflection
 
 Public Class FrmDBAuswahl
@@ -24,6 +25,12 @@ Public Class FrmDBAuswahl
             '    Logger.GetInstance.Log("Log File erstellt")
             'End If
 
+
+            'Try
+            '    Dim a As JObject = JObject.Parse(bspDelivery1Menge0)
+            'Catch ex As Exception
+            '    MsgBox(ex.Message)
+            'End Try
 
             'Lesen der Konfigurationsdateien
             If Not Proffix.Settings.IsLoaded Then

@@ -50,5 +50,8 @@
     <Setting Name="ServiceAPIAircraftsMethod" Type="System.String" Scope="User">
       <Value Profile="(Default)">https://test.glider-fls.ch/api/v1/aircrafts/overview</Value>
     </Setting>
+	<Setting Name="ServiceAPILocationsMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://test.glider-fls.ch/api/v1/locations/overview</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

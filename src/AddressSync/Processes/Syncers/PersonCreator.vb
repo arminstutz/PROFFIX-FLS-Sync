@@ -45,10 +45,13 @@ Public Class PersonCreator
             '--> wurde in PX gelöscht, da nur noch in FLS vorhanden
         Else
 
-            ' wenn in FLS NICHT seit letzter Synchronisation verändert --> in FLS auch löschen 
+            ' PersonId existiert nur in FLS, hat aber eine MemberNr, Adresse wurde aber nicht verändert 
+            ' wenn in FLS NICHT seit letzter Synchronisation verändert --> nichts machen
             If CDate(FlsHelper.GetPersonChangeDate(person)) < lastSync Then
 
-                logComplete("Nur in FLS und seit letzter Synchronisation nicht verändert: Nachname: " + person("Lastname").ToString + " Vorname: " + person("Firstname").ToString + " Mit dieser Adresse nichts gemacht.", LogLevel.Info)
+                Logger.GetInstance.Log(LogLevel.Info, "Info: Adresse Name: " + person("Lastname").ToString + " Vorname: " + person("Firstname").ToString + " hat die PersonId " + person("PersonId").ToString.ToLower +
+                                       ", welche nur in FLS existiert aber eine MemberNr " + GetValOrDef(person, "ClubRelatedPersonDetails.MemberNumber") + " hat. " + vbCrLf +
+                                       "Die Adresse wurde seit der letzten Synchronisation nicht verändert. Mit dieser Adresse wird daher nichts gemacht.")
 
                 '' wenn nicht bereits auf gelöscht gesetzt --> in FLS löschen
                 'If GetValOrDef(person, "ClubRelatedPersonDetails.IsActive").ToLower <> "false" Then
@@ -67,9 +70,9 @@ Public Class PersonCreator
                 FlsHelper.RemovePostfixFromMemberNr(person)
 
                 ' prüfen, ob bereits vorhanden aber als nicht zu synchronisieren --> wenn ja wird gleich nur synchronisieren = 1 gesetzt
-                If pxhelper.DoesAddressExistsAsNichtZuSynchronisierend(person("PersonId").ToString) Then
-                    If Not pxhelper.SetAsZuSynchroniseren(person("PersonId").ToString) Then
-                        logComplete("Die Adresse mit der PersonId " + person("PersonId").ToString + "wurde in Proffix als zu synchronisieren gesetzt, da sie in FLS nach der letzten Synchronisation noch verändert wurde", LogLevel.Info)
+                If pxhelper.DoesAddressExistsAsNichtZuSynchronisierend(person("PersonId").ToString.ToLower.Trim) Then
+                    If Not pxhelper.SetAsZuSynchroniseren(person("PersonId").ToString.ToLower.Trim) Then
+                        logComplete("Die Adresse mit der PersonId " + person("PersonId").ToString.ToLower.Trim + "wurde in Proffix als zu synchronisieren gesetzt, da sie in FLS nach der letzten Synchronisation noch verändert wurde", LogLevel.Info)
                         Return False
                     End If
 
@@ -90,7 +93,7 @@ Public Class PersonCreator
                 End If
 
                     ' in person wurde bei MemberNr Postfix entfernt --> an FLS senden
-                    response_FLS = _serviceClient.SubmitChanges(person("PersonId").ToString(), person, SyncerCommitCommand.Update)
+                response_FLS = _serviceClient.SubmitChanges(person("PersonId").ToString.ToLower.Trim, person, SyncerCommitCommand.Update)
                     If response_FLS <> "OK" Then
                         logComplete("Fehler beim Update von MemberNr ohne postfix. " + person.ToString, LogLevel.Exception)
                         Return False
@@ -120,7 +123,7 @@ Public Class PersonCreator
             ' wenn Adresse nicht unter den hartgelöschten --> Fehler
             ' die Adresse unter den gelöschten suchen
             For Each person As JObject In flshardDeletedPersons
-                If person("PersonId").ToString = ProffixHelper.GetZusatzFelder(address, "Z_FLSPersonId") Then
+                If person("PersonId").ToString.ToLower.Trim = ProffixHelper.GetZusatzFelder(address, "Z_FLSPersonId") Then
                     DeletedOn = DateTime.Parse(GetValOrDef(person, "DeletedOn"))
                 End If
             Next
@@ -219,7 +222,7 @@ Public Class PersonCreator
         If bisherigeAdressNr = "" Then
             ' neue AdressNr in FLS-Adresse speichern und an FLS übergeben
             person("ClubRelatedPersonDetails")("MemberNumber") = adresse.AdressNr.ToString
-            response_FLS = _serviceClient.SubmitChanges(person("PersonId").ToString(), person, SyncerCommitCommand.Update)
+            response_FLS = _serviceClient.SubmitChanges(person("PersonId").ToString.ToLower.Trim, person, SyncerCommitCommand.Update)
             If response_FLS <> "OK" Then
                 logComplete("Fehler beim updaten der AdressNr " + adresse.AdressNr.ToString + " in FLS der soeben in Proffix erstellten Adresse. Name: " + adresse.Name, LogLevel.Exception, response_FLS)
                 Return False

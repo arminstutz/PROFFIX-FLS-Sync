@@ -50,16 +50,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="pxBook">
-      <HintPath>..\..\..\..\..\PROFFIX\PROFFIX_v4.0.22\Prog\pxBook.dll</HintPath>
+      <HintPath>..\DLLs\pxBook.dll</HintPath>
     </Reference>
-    <Reference Include="pxTools">
-      <HintPath>..\..\..\..\..\PROFFIX\PROFFIX_v4.0.22\Prog\pxTools.dll</HintPath>
+    <Reference Include="pxModul">
+      <HintPath>..\DLLs\pxModul.dll</HintPath>
     </Reference>
     <Reference Include="SMC.Lib">
-      <HintPath>L:\SMC Dvlp\Libs\Danismc\SMC.Lib.dll</HintPath>
+      <HintPath>..\DLLs\SMC.Lib.dll</HintPath>
     </Reference>
     <Reference Include="SMC.Proffix">
-      <HintPath>L:\SMC Dvlp\Libs\Danismc\SMC.Proffix.dll</HintPath>
+      <HintPath>..\DLLs\SMC.Proffix.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -98,6 +98,7 @@
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="My Project\Resources.Designer.vb">
       <AutoGen>True</AutoGen>

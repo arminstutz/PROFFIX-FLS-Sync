@@ -174,9 +174,10 @@ Public Class Exporter
 
 
         sql = "Select artikelNrLAG, bezeichnung1, bezeichnung2, bezeichnung3, geloescht from lag_artikel " + _
-             "where gruppeLAG = 'FLS' and (erstelltam > '" + LastExport.ToString(pxHelper.dateformat + " HH:mm:ss") + "' or geaendertam > '" + LastExport.ToString(pxHelper.dateformat + " HH:mm:ss") + "')"
+             "where Z_FLS = 1 and (erstelltam > '" + LastExport.ToString(pxHelper.dateformat + " HH:mm:ss") + "' or geaendertam > '" + LastExport.ToString(pxHelper.dateformat + " HH:mm:ss") + "')"
         If Not MyConn.getRecord(rs, sql, fehler) Then
             logComplete("Fehler beim Laden der geänderten Artikel" + fehler, LogLevel.Exception)
+            Return Nothing
         Else
 
             ' geholte Artikel in einer Liste speichern
